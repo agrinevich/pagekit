@@ -1,0 +1,2 @@
+# pagekit
+Static Website CMS
