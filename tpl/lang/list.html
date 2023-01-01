@@ -1,0 +1,23 @@
+<h1>Langs</h1>
+
+[% msg_text %]
+
+<hr noshade size="1">
+
+<table>
+    <tr>
+        <th>isocode</th>
+        <th>nick</th>
+        <th>action</th>
+    </tr>
+    <form name="lang-add" action="/admin/lang" method="POST">
+        <input type="hidden" name="do" value="add">
+        <tr>
+            <td><input type="text" name="isocode" size="24"></td>
+            <td><input type="text" name="nick" size="24"></td>
+            <td align="center"><input type="submit" value=" Add "></td>
+        </tr>
+    </form>
+    [% list %]
+</table>
+<br>

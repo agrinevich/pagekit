@@ -1,0 +1,16 @@
+[site]
+domain = site.com
+host   = http://site.com
+
+[path]
+templates = /tpl
+html      = /html
+
+[admin]
+user    = admin
+pass    = 123456
+
+[storage]
+type = sqlite
+path = /strg
+name = sitecom.db

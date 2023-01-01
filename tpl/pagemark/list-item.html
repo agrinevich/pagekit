@@ -1,0 +1,15 @@
+<tr>
+    <form name="pagemark-update" action="/admin/pagemark" method="POST">
+        <input type="hidden" name="do" value="upd">
+        <input type="hidden" name="id" value="[% id %]">
+        <input type="hidden" name="page_id" value="[% page_id %]">
+        <input type="hidden" name="lang_id" value="[% lang_id %]">
+
+        <td><input type="text" name="name" value="[% name %]" size="32"></td>
+        <td><textarea name="value" rows="4" cols="40">[% value %]</textarea></td>
+        <td align="center">
+            <input type="submit" value="Update"> &nbsp;
+            <a href="/admin/pagemark?do=del&id=[% id %]" style="color:red" onclick="return confirm('Delete?')">X</a>
+        </td>
+    </form>
+</tr>

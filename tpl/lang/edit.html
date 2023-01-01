@@ -1,0 +1,15 @@
+<h2>Lang</h2>
+
+<form name="page-update" action="/admin/lang" method="POST">
+    <input type="hidden" name="do" value="upd">
+    <input type="hidden" name="id" value="[% id %]">
+    Isocode: <input type="text" name="isocode" value="[% isocode %]" size="32">
+    <br>
+    Nick: <input type="text" name="nick" value="[% nick %]" size="24">
+    <br>
+    <input type="submit" value="Update">
+</form>
+
+<a href="/admin/lang?do=list">back to list</a>
+
+<br clear="all">

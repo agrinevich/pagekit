@@ -1,0 +1,17 @@
+<h2>Page</h2>
+
+<form name="page-update" action="/admin/page" method="POST">
+    <input type="hidden" name="do" value="upd">
+    <input type="hidden" name="id" value="[% id %]">
+    Name: <input type="text" name="name" value="[% name %]" size="32">
+    <br>
+    Nick: <input type="text" name="nick" value="[% nick %]" size="24">
+    <br>
+    Parent: <select name="parent_id">
+        [% options %]
+    </select>
+    <br>
+    <input type="submit" value="Update">
+</form>
+
+<br clear="all">

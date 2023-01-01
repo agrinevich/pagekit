@@ -1,0 +1,11 @@
+requires 'Config::Tiny';
+requires 'Const::Fast';
+requires 'Daemon::Control';
+requires 'DBD::SQLite';
+requires 'DBI';
+requires 'Moo';
+requires 'Path::Tiny';
+requires 'Plack';
+requires 'Starman';
+requires 'Test::Compile';
+requires 'Text::Xslate';

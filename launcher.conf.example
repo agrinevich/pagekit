@@ -1,0 +1,9 @@
+[rsync]
+src = /home/site/spot/
+dst = /var/www/site.com/
+exclude = /home/site/spot/rsync.exclude
+
+[starman]
+dir = /var/www/site.com
+workers = 1
+aport = 5011

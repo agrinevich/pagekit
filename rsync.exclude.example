@@ -1,0 +1,14 @@
+html/*
+log/*
+strg/*
+tmp/*
+tpl/*
+main.conf
+launcher.conf
+README.md
+LICENSE
+cpanfile
+rsync.exclude
+.git
+.github
+.gitignore

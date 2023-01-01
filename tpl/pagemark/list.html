@@ -1,0 +1,27 @@
+<h1>Page "[% page_name %]" marks</h1>
+
+[% msg_text %]
+
+<hr noshade size="1">
+Lang: [% lang_links %]
+<hr noshade size="1">
+
+<table>
+    <tr>
+        <th>name</th>
+        <th>value</th>
+        <th>action</th>
+    </tr>
+    <form name="pagemark-add" action="/admin/pagemark" method="POST">
+        <input type="hidden" name="do" value="add">
+        <input type="hidden" name="page_id" value="[% page_id %]">
+        <input type="hidden" name="lang_id" value="[% lang_slctd %]">
+        <tr>
+            <td><input type="text" name="name" size="32"></td>
+            <td><textarea name="value" rows="1" cols="40"></textarea></td>
+            <td align="center"><input type="submit" value=" Add "></td>
+        </tr>
+    </form>
+    [% list %]
+</table>
+<br>
