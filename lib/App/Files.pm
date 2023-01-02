@@ -6,8 +6,8 @@ use warnings;
 use English qw( -no_match_vars );
 use Carp qw(croak carp);
 use Path::Tiny;
-use File::Copy::Recursive qw(dircopy pathempty);
 use Number::Bytes::Human qw(format_bytes);
+use File::Copy::Recursive qw(dircopy pathempty);
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 
 our $VERSION = '0.2';
@@ -68,7 +68,6 @@ sub write_file {
     my $file = $args{file};
     my $body = $args{body};
 
-    # return Path::Tiny->new($file)->spew_utf8($body);
     return Path::Tiny->new($file)->spew($body);
 }
 
@@ -107,27 +106,6 @@ sub move_dir {
     my $dst_dir = $args{dst_dir};
 
     return if !-d $src_dir;
-
-    # if ( !-d $dst_dir ) {
-    #     make_path(
-    #         path => $dst_dir,
-    #     );
-    # }
-
-    # my $a_files = get_files(
-    #     dir => $src_dir,
-    # );
-
-    # foreach my $h ( @{$a_files} ) {
-    #     my $src_file = $src_dir . q{/} . $h->{name};
-    #     my $dst_file = $dst_dir . q{/} . $h->{name};
-    #     move_file(
-    #         src => $src_file,
-    #         dst => $dst_file,
-    #     );
-    # }
-
-    # rmdir $src_dir;
 
     copy_dir_recursive(
         src_dir => $src_dir,
@@ -217,70 +195,5 @@ sub extract_zip {
 
     return $es == AZ_OK ? q{} : 'Failed to extract';
 }
-
-# TODO: move to Admin::Templ
-# sub build_tree {
-#     my ($h_args) = @_;
-
-#     my $root_dir    = $h_args->{root_dir};
-#     my $tpl_path    = $h_args->{tpl_path};
-#     my $parent_path = $h_args->{parent_path};
-#     my $level       = $h_args->{level} // 0;
-#     my $h_selected  = $h_args->{h_selected} // {};
-
-#     my %sel    = %{$h_selected};
-#     my $dash   = sprintf q{&nbsp;-} x $level;
-#     my $cwd    = $root_dir . $parent_path;
-#     my $result = q{};
-
-#     my $a_files = get_files( dir => $cwd );
-#     my @names   = map { $_->{name} } @{$a_files};
-#     foreach my $name ( sort @names ) {
-#         my $cur_file = $cwd . q{/} . $name;
-#         my $o_file   = Path::Tiny->new($cur_file);
-
-#         if ( $o_file->is_dir ) {
-#             $result .= Util::Renderer::parse_html(
-#                 root_dir => $root_dir,
-#                 tpl_path => $tpl_path . '/templ',
-#                 tpl_name => 'list-dir.html',
-#                 h_vars   => {
-#                     cwd  => $cwd,
-#                     name => $name,
-#                     # size => $h->{size},
-#                     dash => $dash,
-#                 }
-#             );
-
-#             $result .= build_tree(
-#                 {
-#                     root_dir    => $root_dir,
-#                     tpl_path    => $tpl_path,
-#                     parent_path => $parent_path . q{/} . $name,
-#                     level       => $level + 1,
-#                     h_selected  => $h_selected,
-#                 }
-#             );
-#         }
-#         else {
-#             my $attr = $sel{$cur_file} // q{};
-
-#             $result .= Util::Renderer::parse_html(
-#                 root_dir => $root_dir,
-#                 tpl_path => $tpl_path . '/templ',
-#                 tpl_name => 'list-file.html',
-#                 h_vars   => {
-#                     cwd  => $cwd,
-#                     name => $name,
-#                     # size => $h->{size},
-#                     attr => $attr,
-#                     dash => $dash,
-#                 }
-#             );
-#         }
-#     }
-
-#     return $result;
-# }
 
 1;

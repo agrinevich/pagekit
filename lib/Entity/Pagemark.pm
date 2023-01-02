@@ -114,7 +114,6 @@ sub add {
         };
     }
 
-    # check for duplicates
     my ( $h_duplicates, $err_str ) = $self->ctl->sh->list(
         'pagemark',
         {
@@ -181,7 +180,6 @@ sub upd {
         };
     }
 
-    # check for duplicates
     my ( $h_found, $err_str ) = $self->ctl->sh->list(
         'pagemark',
         {
@@ -235,7 +233,7 @@ sub del {
     my ( $h_data, $err_str ) = $self->ctl->sh->one( 'pagemark', $self->id );
     if ($err_str) {
         return {
-            err => 'failed to delete pagemark: ' . $err_str,
+            err => 'failed to read pagemark: ' . $err_str,
         };
     }
     if ( !$h_data ) {

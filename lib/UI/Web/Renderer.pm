@@ -5,20 +5,12 @@ use warnings;
 
 use Const::Fast;
 use Carp qw(croak carp);
-use HTML::Entities;
 use Path::Tiny; # path, spew_utf8
-use Text::Xslate qw(mark_raw html_escape);
-use Data::Dumper;
+use Text::Xslate qw(mark_raw);
 
 use App::Files;
 
 our $VERSION = '0.2';
-
-# const my $ROUND_NUMBER => 0.999999;
-# const my %MSG_TEXT     => (
-#     success => 'Success',
-#     error   => 'Error',
-# );
 
 sub parse_html {
     my (%args) = @_;
@@ -28,16 +20,14 @@ sub parse_html {
     my $tpl_name = $args{tpl_name};
     my $h_vars   = $args{h_vars};
 
-    # if ( $tpl_name eq 'page_layout.html' ) {
-    #     carp( 'h_vars=' . Dumper($h_vars) );
-    # }
-
-    my %merged   = ();
+    # gmarks are global marks with 'default' values
     my $h_gmarks = _gmarks( root_dir => $root_dir );
+
+    my %merged = ();
     if ( scalar keys %{$h_gmarks} ) {
-        # gmarks are global marks with 'default' values
         %merged = %{$h_gmarks};
-        # then override it if you have another mark value for current page
+
+        # override it if you have another mark value for current page
         while ( my ( $k, $v ) = each( %{$h_vars} ) ) {
             $merged{$k} = $v;
         }
@@ -45,10 +35,6 @@ sub parse_html {
     else {
         %merged = %{$h_vars};
     }
-
-    # if ( $tpl_name eq 'page_layout.html' ) {
-    #     carp( 'merged=' . Dumper( \%merged ) );
-    # }
 
     foreach my $k ( keys %merged ) {
         $merged{$k} = mark_raw( $merged{$k} );
@@ -104,15 +90,5 @@ sub write_html {
 
     return;
 }
-
-# sub do_escape {
-#     my ($str) = @_;
-#     return html_escape($str);
-# }
-
-# sub do_unescape {
-#     my ($str) = @_;
-#     return decode_entities($str);
-# }
 
 1;

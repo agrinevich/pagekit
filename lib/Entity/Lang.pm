@@ -75,7 +75,6 @@ sub add {
         };
     }
 
-    # check for duplicates
     my ( $h_duplicates, $err_str ) = $self->ctl->sh->list( 'lang', { isocode => $self->isocode } );
     if ( scalar keys %{$h_duplicates} ) {
         return {

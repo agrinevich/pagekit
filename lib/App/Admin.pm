@@ -48,6 +48,7 @@ sub run {
         return $o_response;
     }
 
+    # do redirect
     if ( $h_result->{url} ) {
         my $o_response = $o_request->new_response($_RESPONSE_REDIR);
         $o_response->redirect( $h_result->{url} );

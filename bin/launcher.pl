@@ -12,7 +12,7 @@ use lib "$Bin/../lib";
 use App::Config;
 use App::Launcher;
 
-our $VERSION = '0.1';
+our $VERSION = '0.2';
 
 #
 # read input args
@@ -61,7 +61,7 @@ my $o_conf2 = App::Config::get_config(
 # process data
 #
 
-my $method = lc $input{command}; # to make perl critic happy
+my $method = lc $input{command};
 if ( !App::Launcher->can($method) ) {
     carp( 'Abort: unexpected command "' . $input{command} . q{"} );
     exit 1;
@@ -105,11 +105,12 @@ __END__
   Available arguments for command:
     start
     stop
-    rsync
+    rsync    Deploy files to /var/www
+    init     Create DB for new site
 
 =head1 DESCRIPTION
 
-This program will start or stop application as background process or rsync files after git pull
+This program will start/stop application, deploy files after git pull, fill initial database for new site
 
 =head1 AUTHOR
 

@@ -5,7 +5,6 @@ use Carp qw(carp croak);
 use UI::Web::Page;
 use UI::Web::Pagemark;
 use UI::Web::Lang;
-# use Data::Dumper;
 
 use Moo;
 use namespace::clean;
@@ -29,7 +28,6 @@ sub process {
     if ( !exists $o_params->{do} ) {
         $o_params->{do} = 'list';
     }
-    # carp Dumper($o_params);
 
     my $h_entity_response = $self->app->ctl->dispatch( $entity, $o_params );
 

@@ -19,7 +19,6 @@ my $app = sub {
     my $o_response = App::Admin->new(
         root_dir  => "$Bin/..",
         conf_file => 'main.conf',
-        # log_file  => 'admin-error.log',
     )->run($env);
 
     return $o_response->finalize();

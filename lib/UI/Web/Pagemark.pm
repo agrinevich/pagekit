@@ -2,7 +2,6 @@ package UI::Web::Pagemark;
 
 use Const::Fast;
 use Carp qw(carp croak);
-# use Data::Dumper;
 
 use UI::Web::Renderer;
 

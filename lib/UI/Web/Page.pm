@@ -2,7 +2,6 @@ package UI::Web::Page;
 
 use Const::Fast;
 use Carp qw(carp croak);
-use Data::Dumper;
 
 use UI::Web::Renderer;
 use UI::Web::Page::Standard;
@@ -189,7 +188,6 @@ sub gen_pages {
         my $h = $h_langs->{$id};
 
         my $lang_path = $h->{nick} ? q{/} . $h->{nick} : q{};
-        # TODO: check and create dir
 
         $self->go_tree(
             root_dir  => $root_dir,
@@ -223,6 +221,8 @@ sub go_tree {
         return;
     }
 
+    # TODO: check and create dir
+
     foreach my $id ( sort keys %{$h_pages} ) {
         my $h = $h_pages->{$id};
 
@@ -230,7 +230,7 @@ sub go_tree {
             next;
         }
 
-        # later there will be another plugins/types
+        # TODO: add another page types (plugins)
         my $page_type = 'Standard';
         my $gen_class = 'UI::Web::Page::' . $page_type;
 
@@ -246,7 +246,6 @@ sub go_tree {
             my $markvalue = $h_mark->{value};
             $marks{$markname} = $markvalue;
         }
-        # carp( Dumper( \%marks ) );
 
         $gen_class->gen(
             root_dir  => $root_dir,
@@ -294,44 +293,6 @@ sub go_tree {
 #     );
 
 #     return $html;
-# }
-
-# sub _build_paging {
-#     my (%args) = @_;
-
-#     my $root_dir = $args{root_dir};
-#     my $tpl_path = $args{tpl_path};
-#     my $qty      = $args{qty};
-#     my $npp      = $args{npp};
-#     my $p_cur    = $args{p};
-#     my $path     = $args{path};
-
-#     my $result   = q{};
-#     my $tpl_name = q{};
-#     my $suffix   = q{};
-
-#     my $p_qty  = int( $qty / $npp + $ROUND_NUMBER );
-#     my $p_last = $p_qty - 1;
-#     foreach my $p ( 0 .. $p_last ) {
-#         if   ( $p == $p_cur ) { $tpl_name = 'paging-item-cur.html'; }
-#         else                  { $tpl_name = 'paging-item.html'; }
-
-#         $suffix = $p ? $p : q{};
-
-#         $result .= parse_html(
-#             root_dir => $root_dir,
-#             tpl_path => $tpl_path . '/cat',
-#             tpl_name => $tpl_name,
-#             h_vars   => {
-#                 p      => $p,
-#                 num    => ( $p + 1 ),
-#                 path   => $path,
-#                 suffix => $suffix,
-#             },
-#         );
-#     }
-
-#     return $result;
 # }
 
 1;
