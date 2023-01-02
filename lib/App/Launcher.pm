@@ -8,8 +8,8 @@ use Carp qw( croak );
 use English qw( -no_match_vars );
 use POSIX qw( strftime );
 use Scalar::Util qw( reftype );
-use Data::Dumper;
 use FileHandle;
+use Data::Dumper;
 
 use constant {
     EXECFAIL => -1,
@@ -31,22 +31,6 @@ sub start {
         appfile   => '/bin/admin.psgi',
     );
 
-    # _starman(
-    #     port      => $o_conf->{starman}->{uport},
-    #     workers   => $o_conf->{starman}->{workers},
-    #     dir       => $o_conf->{starman}->{dir},
-    #     pidfile   => '/tmp/user.pid',
-    #     errorlog  => '/log/user-error.log',
-    #     accesslog => '/log/user-access.log',
-    #     appfile   => '/bin/user.psgi',
-    # );
-
-    # my $err = _call_system(
-    #     call => $o_conf->{starman}->{dir} . '/bin/jqctl.pl start',
-    # );
-    # my $msg = $err ? $err : 'job queue started';
-    # _tellme( undef, $msg );
-
     return 1;
 }
 
@@ -58,13 +42,13 @@ sub rsync {
     my $exclfile = $o_conf->{rsync}->{exclude};
 
     my $call = "rsync -a --exclude-from='$exclfile' $srcdir $dstdir";
-    _tellme( undef, $call );
+    _tellme($call);
 
     my $err = _call_system(
         call => $call,
     );
     my $msg = $err ? $err : 'rsync done';
-    _tellme( undef, $msg );
+    _tellme($msg);
 
     return 1;
 }
@@ -77,16 +61,6 @@ sub stop {
     _kill_process(
         pidfile => $dir . '/tmp/admin.pid',
     );
-
-    # _kill_process(
-    #     pidfile => $dir . '/tmp/user.pid',
-    # );
-
-    # my $err = _call_system(
-    #     call => $dir . '/bin/jqctl.pl stop',
-    # );
-    # my $msg = $err ? $err : 'job queue stopped';
-    # _tellme( undef, $msg );
 
     return 1;
 }
@@ -105,19 +79,19 @@ sub init {
         my $sql_file = $root_dir . $strg_path . q{/} . 'init.sql';
 
         if ( !-f $sql_file ) {
-            _tellme( undef, 'Aborted init: no sql file - ' . $sql_file );
+            _tellme( 'Aborted init: no sql file - ' . $sql_file );
             return;
         }
 
         my $call = "sqlite3 ${db_file} < ${sql_file}";
-        _tellme( undef, $call );
+        _tellme($call);
 
         my $err = _call_system(
             call => $call,
         );
 
         my $msg = $err ? $err : 'init done';
-        _tellme( undef, $msg );
+        _tellme($msg);
 
     }
 
@@ -141,7 +115,7 @@ sub _starman {
     );
 
     my $msg = $err ? $err : $af . ' started';
-    _tellme( undef, $msg );
+    _tellme($msg);
 
     return;
 }
@@ -174,7 +148,7 @@ sub _kill_process {
         purpose => 'kill ' . $pid,
     );
     my $msg = $err ? $err : $pidfile . ' killed';
-    _tellme( undef, $msg );
+    _tellme($msg);
 
     return;
 }
@@ -200,7 +174,7 @@ sub _call_system {
 #
 
 sub _tellme {
-    my ( undef, $input ) = @_;
+    my ($input) = @_;
 
     my $str;
     if   ( !reftype $input ) { $str = $input; }

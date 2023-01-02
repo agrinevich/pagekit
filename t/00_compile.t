@@ -7,7 +7,7 @@ use Test::Compile;
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
-our $VERSION = '1.0';
+our $VERSION = '0.2';
 
 my $test = Test::Compile->new();
 

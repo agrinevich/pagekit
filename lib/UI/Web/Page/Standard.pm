@@ -1,10 +1,13 @@
 package UI::Web::Page::Standard;
 
+#
+# generate one static page of default type
+#
+
 use strict;
 use warnings;
 
 use Carp qw(croak carp);
-use Data::Dumper;
 
 use App::Files;
 use UI::Web::Renderer;
@@ -27,8 +30,6 @@ sub gen {
         );
     }
     my $out_file = $out_dir . '/index.html';
-    # carp( Dumper($h_data) );
-    # carp( 'out=' . $out_file );
 
     UI::Web::Renderer::write_html(
         $h_data,

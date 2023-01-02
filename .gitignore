@@ -1,0 +1,6 @@
+log/
+tmp/
+html/
+/main.conf
+/launcher.conf
+/rsync.exclude

@@ -1,15 +1,15 @@
 package App::Basic;
 
+#
+# Basic app class
+#
+
 use App::Config;
 
 use Moo;
 use namespace::clean;
 
 our $VERSION = '0.2';
-
-#
-# Basic app class
-#
 
 has 'root_dir' => (
     is       => 'ro',

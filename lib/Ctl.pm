@@ -11,7 +11,7 @@ use namespace::clean;
 our $VERSION = '0.2';
 
 # When you run /bin/launcher.pl
-# App::Admin starts and gives Controller 2 adapters:
+# App::Admin starts and creates Controller with adapters:
 #
 # uih - User Interface Handler (web, cli, api)
 # sh  - Storage Handler (memory, file, database)

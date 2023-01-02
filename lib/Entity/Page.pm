@@ -104,7 +104,6 @@ sub add {
     my $path        = $parent_path . q{/} . $self->nick;
     $self->path($path);
 
-    # check for duplicates
     my ( $h_duplicates, $err_str ) = $self->ctl->sh->list( 'page', { path => $path } );
     if ( scalar keys %{$h_duplicates} ) {
         return {
@@ -168,7 +167,6 @@ sub upd {
     my $path        = $parent_path . q{/} . $self->nick;
     $self->path($path);
 
-    # check for duplicates by path
     my ( $h_found, $err_str ) = $self->ctl->sh->list( 'page', { path => $path } );
     my %found = %{$h_found};
     delete $found{ $self->id };
@@ -283,7 +281,7 @@ sub generate {
 }
 
 #
-# recursion !
+# recursive
 #
 sub _build_path {
     my ( $self, %args ) = @_;
