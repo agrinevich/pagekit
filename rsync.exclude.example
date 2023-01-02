@@ -1,10 +1,4 @@
-html/*
-log/*
-strg/*
-tmp/*
 tpl/*
-main.conf
-launcher.conf
 README.md
 LICENSE
 cpanfile
