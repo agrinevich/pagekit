@@ -21,9 +21,10 @@ sub gen {
     my $tpl_path  = $args{tpl_path}  // q{};
     my $html_path = $args{html_path} // q{};
     my $lang_path = $args{lang_path} // q{};
+    my $page_path = $args{page_path} // q{};
     my $h_data    = $args{h_data}    // {};
 
-    my $out_dir = $root_dir . $html_path . $lang_path . $h_data->{page_path};
+    my $out_dir = $root_dir . $html_path . $lang_path . $page_path;
     if ( !-d $out_dir ) {
         App::Files::make_path(
             path => $out_dir,

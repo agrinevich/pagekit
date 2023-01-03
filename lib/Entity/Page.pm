@@ -43,7 +43,10 @@ sub list {
     my %filters;
     foreach my $k ( keys %{$h_filters} ) {
         if ( $k =~ /^fltr/i ) {
-            my ( undef, $field ) = split /\_/, $k;
+            my @k_parts = split /\_/, $k;
+            shift @k_parts;
+            my $field = join q{_}, @k_parts;
+
             $filters{$field} = $h_filters->{$k};
         }
     }
