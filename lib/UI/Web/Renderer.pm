@@ -7,6 +7,7 @@ use Const::Fast;
 use Carp qw(croak carp);
 use Path::Tiny; # path, spew_utf8
 use Text::Xslate qw(mark_raw);
+# use Data::Dumper;
 
 use App::Files;
 
@@ -44,6 +45,7 @@ sub parse_html {
         path        => [ $root_dir . $tpl_path ],
         syntax      => 'TTerse',
         input_layer => ':utf8',
+        cache       => 0,
     );
 
     return $tx->render( $tpl_name, \%merged ) || croak __PACKAGE__ . ' failed to parse_html';

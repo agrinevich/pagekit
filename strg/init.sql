@@ -22,5 +22,6 @@ CREATE TABLE IF NOT EXISTS 'pagemark' (
     'value'   TEXT NOT NULL
 );
 INSERT INTO 'pagemark' ('page_id','lang_id','name','value') VALUES (1,1,'page_title','Home Page');
-INSERT INTO 'pagemark' ('page_id','lang_id','name','value') VALUES (1,1,'page_descr','This is my site - welcome!');
-INSERT INTO 'pagemark' ('page_id','lang_id','name','value') VALUES (1,1,'page_main','<h1>Hello</h1><p>Welcome.</p>');
+INSERT INTO 'pagemark' ('page_id','lang_id','name','value') VALUES (1,1,'page_name','Home');
+INSERT INTO 'pagemark' ('page_id','lang_id','name','value') VALUES (1,1,'page_descr','This is page meta descrition.');
+INSERT INTO 'pagemark' ('page_id','lang_id','name','value') VALUES (1,1,'page_main','<h1>Hello</h1><p>Welcome to page text.</p>');

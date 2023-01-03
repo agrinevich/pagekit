@@ -41,7 +41,7 @@ sub rsync {
     my $dstdir   = $o_conf->{rsync}->{dst};
     my $exclfile = $o_conf->{rsync}->{exclude};
 
-    my $call = "rsync -a --exclude-from='$exclfile' $srcdir $dstdir";
+    my $call = "rsync -av --exclude-from='$exclfile' $srcdir $dstdir";
     _tellme($call);
 
     my $err = _call_system(

@@ -221,8 +221,6 @@ sub go_tree {
         return;
     }
 
-    # TODO: check and create dir
-
     foreach my $id ( sort keys %{$h_pages} ) {
         my $h = $h_pages->{$id};
 
@@ -234,28 +232,40 @@ sub go_tree {
         my $page_type = 'Standard';
         my $gen_class = 'UI::Web::Page::' . $page_type;
 
+        my %marks = ();
         my ( $h_pagemarks, $err_str ) = $self->app->ctl->sh->list(
             'pagemark', {
                 page_id => $id,
                 lang_id => $lang_id,
             },
         );
-        my %marks = ();
+        # why not using %{$h_pagemarks} ?
         while ( my ( $mark_id, $h_mark ) = each( %{$h_pagemarks} ) ) {
             my $markname  = $h_mark->{name};
             my $markvalue = $h_mark->{value};
             $marks{$markname} = $markvalue;
         }
 
+        my ( $d_navi, $m_navi ) = $self->_build_navi(
+            root_dir        => $root_dir,
+            tpl_path        => $tpl_path . q{/} . $_ENTITY,
+            lang_id         => $lang_id,
+            lang_path       => $lang_path,
+            id_cur          => $id,
+            parent_id       => $parent_id,
+            page_name_inner => $h->{name},
+            # child_qty => $child_qty,
+        );
+        $marks{desktop_navi} = $d_navi;
+        $marks{mobile_navi}  = $m_navi;
+
         $gen_class->gen(
             root_dir  => $root_dir,
             tpl_path  => $tpl_path,
             html_path => $html_path,
             lang_path => $lang_path,
-            h_data    => {
-                %marks,
-                page_path => $h->{path},
-            },
+            page_path => $h->{path},
+            h_data    => {%marks},
         );
 
         $self->go_tree(
@@ -271,6 +281,149 @@ sub go_tree {
     }
 
     return;
+}
+
+#
+# navigation link text is built from special marks for given language
+#
+sub _build_navi {
+    my ( $self, %args ) = @_;
+
+    my $root_dir        = $args{root_dir}        // q{};
+    my $tpl_path        = $args{tpl_path}        // q{};
+    my $lang_id         = $args{lang_id}         // 0;
+    my $lang_path       = $args{lang_path}       // q{};
+    my $id_cur          = $args{id_cur}          // 0;
+    my $parent_id       = $args{parent_id}       // 0;
+    my $page_name_inner = $args{page_name_inner} // q{};
+    # my $child_qty = $args{child_qty} // 0;
+
+    my $d_links = q{};
+    my $m_links = q{};
+
+    my ( $h_pages, $err_str ) = $self->app->ctl->sh->list(
+        'page', {
+            parent_id => $parent_id,
+        },
+    );
+
+    foreach my $id ( sort keys %{$h_pages} ) {
+        my $h = $h_pages->{$id};
+
+        my $page_name;
+        my ( $h_marks, $err_str ) = $self->app->ctl->sh->list(
+            'pagemark', {
+                page_id => $id,
+                lang_id => $lang_id,
+                name    => 'page_name',
+            },
+        );
+        my @mark_ids = keys %{$h_marks};
+        if ( scalar @mark_ids ) {
+            my $mark_id = $mark_ids[0];
+            $page_name = $h_marks->{$mark_id}->{value};
+        }
+        else {
+            $page_name = $page_name_inner;
+        }
+
+        my $page_path = $h->{path};
+        my $suffix    = q{};
+
+        my ( $d_child_links, $m_child_links );
+        if ( $h->{id} == $id_cur ) {
+            $suffix = '-cur';
+            ( $d_child_links, $m_child_links ) = $self->_child_links(
+                root_dir  => $root_dir,
+                tpl_path  => $tpl_path,
+                lang_id   => $lang_id,
+                lang_path => $lang_path,
+                parent_id => $id,
+            );
+        }
+
+        $d_links .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => "page-dnavi-item$suffix.html",
+            h_vars   => {
+                name        => $page_name,
+                path        => $lang_path . $page_path,
+                child_links => $d_child_links,
+            },
+        );
+
+        $m_links .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => "page-mnavi-item$suffix.html",
+            h_vars   => {
+                name        => $page_name,
+                path        => $lang_path . $page_path,
+                child_links => $m_child_links,
+            },
+        );
+    }
+
+    return ( $d_links, $m_links );
+}
+
+sub _child_links {
+    my ( $self, %args ) = @_;
+
+    my $root_dir  = $args{root_dir}  // q{};
+    my $tpl_path  = $args{tpl_path}  // q{};
+    my $lang_id   = $args{lang_id}   // 0;
+    my $lang_path = $args{lang_path} // q{};
+    my $parent_id = $args{parent_id} // 0;
+
+    my $d_links = q{};
+    my $m_links = q{};
+
+    my ( $h_pages, $err_str ) = $self->app->ctl->sh->list(
+        'page', {
+            parent_id => $parent_id,
+        },
+    );
+
+    foreach my $id ( sort keys %{$h_pages} ) {
+        my $h = $h_pages->{$id};
+
+        my ( $h_marks, $err_str ) = $self->app->ctl->sh->list(
+            'pagemark', {
+                page_id => $id,
+                lang_id => $lang_id,
+                name    => 'page_name',
+            },
+        );
+        my @mark_ids  = keys %{$h_marks};
+        my $mark_id   = $mark_ids[0];
+        my $page_name = $h_marks->{$mark_id}->{value};
+
+        my $page_path = $h->{path};
+
+        $d_links .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => "page-dnavi-child.html",
+            h_vars   => {
+                name => $page_name,
+                path => $lang_path . $page_path,
+            },
+        );
+
+        $m_links .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => "page-mnavi-child.html",
+            h_vars   => {
+                name => $page_name,
+                path => $lang_path . $page_path,
+            },
+        );
+    }
+
+    return ( $d_links, $m_links );
 }
 
 # sub _build_msg {
