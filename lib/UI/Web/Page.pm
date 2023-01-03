@@ -228,24 +228,6 @@ sub go_tree {
             next;
         }
 
-        # TODO: add another page types (plugins)
-        my $page_type = 'Standard';
-        my $gen_class = 'UI::Web::Page::' . $page_type;
-
-        my %marks = ();
-        my ( $h_pagemarks, $err_str ) = $self->app->ctl->sh->list(
-            'pagemark', {
-                page_id => $id,
-                lang_id => $lang_id,
-            },
-        );
-        # why not using %{$h_pagemarks} ?
-        while ( my ( $mark_id, $h_mark ) = each( %{$h_pagemarks} ) ) {
-            my $markname  = $h_mark->{name};
-            my $markvalue = $h_mark->{value};
-            $marks{$markname} = $markvalue;
-        }
-
         my ( $d_navi, $m_navi ) = $self->_build_navi(
             root_dir        => $root_dir,
             tpl_path        => $tpl_path . q{/} . $_ENTITY,
@@ -254,18 +236,23 @@ sub go_tree {
             id_cur          => $id,
             parent_id       => $parent_id,
             page_name_inner => $h->{name},
-            # child_qty => $child_qty,
         );
-        $marks{desktop_navi} = $d_navi;
-        $marks{mobile_navi}  = $m_navi;
+
+        # TODO: add another page types (plugins)
+        my $page_type = 'Standard';
+        my $gen_class = 'UI::Web::Page::' . $page_type;
 
         $gen_class->gen(
+            sh        => $self->app->ctl->sh,
             root_dir  => $root_dir,
             tpl_path  => $tpl_path,
             html_path => $html_path,
             lang_path => $lang_path,
             page_path => $h->{path},
-            h_data    => {%marks},
+            page_id   => $id,
+            lang_id   => $lang_id,
+            'd_navi'  => $d_navi,
+            'm_navi'  => $m_navi,
         );
 
         $self->go_tree(
@@ -284,7 +271,7 @@ sub go_tree {
 }
 
 #
-# navigation link text is built from special marks for given language
+# navigation link text is built from special mark 'page_name'
 #
 sub _build_navi {
     my ( $self, %args ) = @_;
@@ -296,7 +283,6 @@ sub _build_navi {
     my $id_cur          = $args{id_cur}          // 0;
     my $parent_id       = $args{parent_id}       // 0;
     my $page_name_inner = $args{page_name_inner} // q{};
-    # my $child_qty = $args{child_qty} // 0;
 
     my $d_links = q{};
     my $m_links = q{};
