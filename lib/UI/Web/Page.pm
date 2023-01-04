@@ -178,6 +178,7 @@ sub gen_pages {
     my ($self) = @_;
 
     my $root_dir  = $self->app->root_dir;
+    my $site_host = $self->app->config->{site}->{host};
     my $html_path = $self->app->config->{path}->{html};
     my $tpl_path  = $self->app->config->{path}->{templates};
 
@@ -190,6 +191,7 @@ sub gen_pages {
         my $lang_path = $h->{nick} ? q{/} . $h->{nick} : q{};
 
         $self->go_tree(
+            site_host => $site_host,
             root_dir  => $root_dir,
             tpl_path  => $tpl_path,
             html_path => $html_path,
@@ -198,6 +200,7 @@ sub gen_pages {
             parent_id => 0,
             level     => 0,
             items     => $h_pages,
+            langs     => $h_langs,
         );
     }
 
@@ -207,6 +210,7 @@ sub gen_pages {
 sub go_tree {
     my ( $self, %args ) = @_;
 
+    my $site_host = $args{site_host} // q{};
     my $root_dir  = $args{root_dir}  // q{};
     my $tpl_path  = $args{tpl_path}  // q{};
     my $html_path = $args{html_path} // q{};
@@ -215,6 +219,7 @@ sub go_tree {
     my $parent_id = $args{parent_id} // 0;
     my $level     = $args{level}     // 0;
     my $h_pages   = $args{items}     // {};
+    my $h_langs   = $args{langs}     // {};
 
     if ( $level > 5 ) {
         carp 'recursion level > 5';
@@ -228,7 +233,7 @@ sub go_tree {
             next;
         }
 
-        my ( $d_navi, $m_navi ) = $self->_build_navi(
+        my ( $d_navi, $m_navi ) = $self->_navi_links(
             root_dir        => $root_dir,
             tpl_path        => $tpl_path . q{/} . $_ENTITY,
             lang_id         => $lang_id,
@@ -238,24 +243,38 @@ sub go_tree {
             page_name_inner => $h->{name},
         );
 
+        my ( $lang_links, $meta_tags ) = $self->_lang_links(
+            site_host => $site_host,
+            root_dir  => $root_dir,
+            tpl_path  => $tpl_path . q{/} . $_ENTITY,
+            page_path => $h->{path},
+            lang_id   => $lang_id,
+            lang_path => $lang_path,
+            langs     => $h_langs,
+        );
+
         # TODO: add another page types (plugins)
         my $page_type = 'Standard';
         my $gen_class = 'UI::Web::Page::' . $page_type;
 
         $gen_class->gen(
-            sh        => $self->app->ctl->sh,
-            root_dir  => $root_dir,
-            tpl_path  => $tpl_path,
-            html_path => $html_path,
-            lang_path => $lang_path,
-            page_path => $h->{path},
-            page_id   => $id,
-            lang_id   => $lang_id,
-            'd_navi'  => $d_navi,
-            'm_navi'  => $m_navi,
+            sh            => $self->app->ctl->sh,
+            site_host     => $site_host,
+            root_dir      => $root_dir,
+            tpl_path      => $tpl_path,
+            html_path     => $html_path,
+            lang_path     => $lang_path,
+            lang_id       => $lang_id,
+            page_path     => $h->{path},
+            page_id       => $id,
+            lang_links    => $lang_links,
+            lang_metatags => $meta_tags,
+            'd_navi'      => $d_navi,
+            'm_navi'      => $m_navi,
         );
 
         $self->go_tree(
+            site_host => $site_host,
             root_dir  => $root_dir,
             tpl_path  => $tpl_path,
             html_path => $html_path,
@@ -264,6 +283,7 @@ sub go_tree {
             parent_id => $id,
             level     => $level + 1,
             items     => $h_pages,
+            langs     => $h_langs,
         );
     }
 
@@ -273,7 +293,7 @@ sub go_tree {
 #
 # navigation link text is built from special mark 'page_name'
 #
-sub _build_navi {
+sub _navi_links {
     my ( $self, %args ) = @_;
 
     my $root_dir        = $args{root_dir}        // q{};
@@ -410,6 +430,63 @@ sub _child_links {
     }
 
     return ( $d_links, $m_links );
+}
+
+sub _lang_links {
+    my ( $self, %args ) = @_;
+
+    my $site_host     = $args{site_host} // q{};
+    my $root_dir      = $args{root_dir}  // q{};
+    my $tpl_path      = $args{tpl_path}  // q{};
+    my $page_path     = $args{page_path} // q{};
+    my $lang_id_cur   = $args{lang_id}   // 0;
+    my $lang_path_cur = $args{lang_path} // q{};
+    my $h_langs       = $args{langs}     // {};
+
+    my $meta_tags  = q{};
+    my $lang_links = q{};
+
+    # canonical
+    $meta_tags .= UI::Web::Renderer::parse_html(
+        root_dir => $root_dir,
+        tpl_path => $tpl_path,
+        tpl_name => "page-lang-metatag-c.html",
+        h_vars   => {
+            site_host => $site_host,
+            path      => $lang_path_cur . $page_path,
+        },
+    );
+
+    foreach my $id ( sort keys %{$h_langs} ) {
+        my $h = $h_langs->{$id};
+
+        my $lang_path = $h->{nick} ? q{/} . $h->{nick} : q{};
+        my $link_path = $lang_path . $page_path;
+
+        $lang_links .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => "page-lang-link.html",
+            h_vars   => {
+                site_host => $site_host,
+                path      => $link_path,
+                isocode   => $h->{isocode},
+            },
+        );
+
+        $meta_tags .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => "page-lang-metatag.html",
+            h_vars   => {
+                site_host => $site_host,
+                path      => $link_path,
+                hreflang  => $h->{isocode},
+            },
+        );
+    }
+
+    return ( $lang_links, $meta_tags );
 }
 
 # sub _build_msg {

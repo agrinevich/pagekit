@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <base href="[% site_host %]">
     <title>[% page_title %]</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +17,9 @@
             font-weight: bold;
         }
     </style>
+
+    [% lang_metatags %]
+
 </head>
 
 <body>
@@ -27,6 +31,8 @@
     [% page_main %]
 
     [% page_footer %]
+
+    [% lang_links %]
 
 </body>
 
