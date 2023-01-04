@@ -23,14 +23,17 @@ sub gen {
     my $tpl_path  = $args{tpl_path}  // q{};
     my $html_path = $args{html_path} // q{};
     my $lang_path = $args{lang_path} // q{};
+    my $lang_id   = $args{lang_id}   // 0;
     my $page_path = $args{page_path} // q{};
     my $page_id   = $args{page_id}   // 0;
-    my $lang_id   = $args{lang_id}   // 0;
 
     my %marks = ();
 
-    $marks{desktop_navi} = $args{d_navi};
-    $marks{mobile_navi}  = $args{m_navi};
+    $marks{site_host}     = $args{site_host};
+    $marks{desktop_navi}  = $args{d_navi};
+    $marks{mobile_navi}   = $args{m_navi};
+    $marks{lang_links}    = $args{lang_links};
+    $marks{lang_metatags} = $args{lang_metatags};
 
     my ( $h_pagemarks, $err_str ) = $sh->list(
         'pagemark', {
