@@ -60,7 +60,7 @@ sub gen {
         {
             root_dir => $root_dir,
             tpl_path => $tpl_path,
-            tpl_file => 'page_layout.html',
+            tpl_file => 'page-layout.html',
             out_file => $out_file,
         },
     );
