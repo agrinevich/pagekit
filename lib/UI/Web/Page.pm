@@ -2,6 +2,8 @@ package UI::Web::Page;
 
 use Const::Fast;
 use Carp qw(carp croak);
+use POSIX ();
+use POSIX qw(strftime);
 
 use UI::Web::Renderer;
 use UI::Web::Page::Standard;
@@ -185,6 +187,9 @@ sub gen_pages {
     my ( $h_langs, $err_str )  = $self->app->ctl->sh->list('lang');
     my ( $h_pages, $err_str2 ) = $self->app->ctl->sh->list('page');
 
+    my $cur_date = strftime( '%Y-%m-%d', localtime );
+    my $a_map    = [];
+
     foreach my $id ( sort keys %{$h_langs} ) {
         my $h = $h_langs->{$id};
 
@@ -201,8 +206,24 @@ sub gen_pages {
             level     => 0,
             items     => $h_pages,
             langs     => $h_langs,
+            a_map     => $a_map,
+            cur_date  => $cur_date,
         );
     }
+
+    my $map_items = join q{}, @{$a_map};
+    my $map_file  = $root_dir . $html_path . '/sitemap.xml';
+    UI::Web::Renderer::write_html(
+        {
+            items => $map_items,
+        },
+        {
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_file => 'page-sitemap.xml',
+            out_file => $map_file,
+        },
+    );
 
     return;
 }
@@ -220,6 +241,8 @@ sub go_tree {
     my $level     = $args{level}     // 0;
     my $h_pages   = $args{items}     // {};
     my $h_langs   = $args{langs}     // {};
+    my $a_map     = $args{a_map}     // [];
+    my $cur_date  = $args{cur_date}  // q{};
 
     if ( $level > 5 ) {
         carp 'recursion level > 5';
@@ -253,25 +276,39 @@ sub go_tree {
             langs     => $h_langs,
         );
 
-        # TODO: add another page types (plugins)
-        my $page_type = 'Standard';
-        my $gen_class = 'UI::Web::Page::' . $page_type;
-
-        $gen_class->gen(
-            sh            => $self->app->ctl->sh,
-            site_host     => $site_host,
-            root_dir      => $root_dir,
-            tpl_path      => $tpl_path,
-            html_path     => $html_path,
-            lang_path     => $lang_path,
-            lang_id       => $lang_id,
-            page_path     => $h->{path},
-            page_id       => $id,
-            lang_links    => $lang_links,
-            lang_metatags => $meta_tags,
-            'd_navi'      => $d_navi,
-            'm_navi'      => $m_navi,
+        my $map_item = UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => "page-sitemap-item.xml",
+            h_vars   => {
+                path      => $lang_path . $h->{path},
+                site_host => $site_host,
+                cur_date  => $cur_date,
+            },
         );
+        push @{$a_map}, $map_item;
+
+        {
+            # TODO: add another page types (plugins)
+            my $page_type = 'Standard';
+            my $gen_class = 'UI::Web::Page::' . $page_type;
+
+            $gen_class->gen(
+                sh            => $self->app->ctl->sh,
+                site_host     => $site_host,
+                root_dir      => $root_dir,
+                tpl_path      => $tpl_path,
+                html_path     => $html_path,
+                lang_path     => $lang_path,
+                lang_id       => $lang_id,
+                page_path     => $h->{path},
+                page_id       => $id,
+                lang_links    => $lang_links,
+                lang_metatags => $meta_tags,
+                'd_navi'      => $d_navi,
+                'm_navi'      => $m_navi,
+            );
+        }
 
         $self->go_tree(
             site_host => $site_host,
@@ -284,6 +321,8 @@ sub go_tree {
             level     => $level + 1,
             items     => $h_pages,
             langs     => $h_langs,
+            a_map     => $a_map,
+            cur_date  => $cur_date,
         );
     }
 
