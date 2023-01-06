@@ -1,4 +1,4 @@
-package UI::Web::Page::Standard;
+package Generator::Standard;
 
 #
 # generate static page of default type
@@ -10,7 +10,7 @@ use warnings;
 use Carp qw(croak carp);
 
 use App::Files;
-use UI::Web::Renderer;
+use Generator::Renderer;
 
 our $VERSION = '0.2';
 
@@ -55,12 +55,12 @@ sub gen {
     }
     my $out_file = $out_dir . '/index.html';
 
-    UI::Web::Renderer::write_html(
+    Generator::Renderer::write_html(
         \%marks,
         {
             root_dir => $root_dir,
             tpl_path => $tpl_path,
-            tpl_file => 'page-layout.html',
+            tpl_file => 'layout.html',
             out_file => $out_file,
         },
     );

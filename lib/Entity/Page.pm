@@ -257,30 +257,20 @@ sub _go_del {
         return $err_str2;
     }
 
+    #
+    # TODO: del files
+    #
+
     my $err_str = $self->ctl->sh->del( 'page', { id => $self->id } );
     if ($err_str) {
         return $err_str;
     }
 
+    #
+    # TODO: del page dir
+    #
+
     return;
-}
-
-sub generate {
-    my ($self) = @_;
-
-    my $err_str = $self->ctl->uih->generate();
-    if ($err_str) {
-        return {
-            err => $err_str,
-        };
-    }
-
-    my $app = $self->ctl->uih->app;
-    my $url = $app->config->{site}->{host} . q{/admin/page?do=list&msg=success};
-
-    return {
-        url => $url,
-    };
 }
 
 #
@@ -308,6 +298,24 @@ sub _build_path {
     }
 
     return $path;
+}
+
+sub generate {
+    my ($self) = @_;
+
+    my $err_str = $self->ctl->gh->gen_pages();
+    if ($err_str) {
+        return {
+            err => $err_str,
+        };
+    }
+
+    my $app = $self->ctl->uih->app;
+    my $url = $app->config->{site}->{host} . q{/admin/page?do=list&msg=success};
+
+    return {
+        url => $url,
+    };
 }
 
 1;

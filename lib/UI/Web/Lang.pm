@@ -20,18 +20,18 @@ const my $_ENTITY => 'lang';
 sub list {
     my ( $self, %args ) = @_;
 
-    my $h_table    = $args{data};
-    my $req_params = $args{req_params};
+    my $h_table = $args{data};
+    # my $req_params = $args{req_params};
 
     my $root_dir = $self->app->root_dir;
     my $tpl_path = $self->app->config->{path}->{templates};
 
     my $list = _build_list(
-        root_dir   => $root_dir,
-        tpl_path   => $tpl_path . q{/} . $_ENTITY,
-        tpl_item   => 'list-item.html',
-        req_params => $req_params,
-        h_table    => $h_table,
+        root_dir => $root_dir,
+        tpl_path => $tpl_path . q{/} . $_ENTITY,
+        tpl_item => 'list-item.html',
+        # req_params => $req_params,
+        h_table => $h_table,
     );
 
     my $html_body = UI::Web::Renderer::parse_html(
@@ -60,8 +60,8 @@ sub list {
 sub one {
     my ( $self, %args ) = @_;
 
-    my $h_data     = $args{data};
-    my $req_params = $args{req_params};
+    my $h_data = $args{data};
+    # my $req_params = $args{req_params};
 
     my $root_dir = $self->app->root_dir;
     my $tpl_path = $self->app->config->{path}->{templates};

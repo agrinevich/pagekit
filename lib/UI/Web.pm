@@ -4,6 +4,7 @@ use Carp qw(carp croak);
 
 use UI::Web::Page;
 use UI::Web::Pagemark;
+# use UI::Web::Pagefile;
 use UI::Web::Lang;
 
 use Moo;
@@ -16,10 +17,7 @@ has 'app' => (
     required => 1,
 );
 
-#
-# returns to App::Admin
-#
-sub process {
+sub parse_request {
     my ( $self, $o_request ) = @_;
 
     my $entity = _parse_path( $o_request->path_info() );
@@ -29,41 +27,7 @@ sub process {
         $o_params->{do} = 'list';
     }
 
-    my $h_entity_response = $self->app->ctl->dispatch( $entity, $o_params );
-
-    if ( exists $h_entity_response->{err} ) {
-        return {
-            body => $h_entity_response->{err},
-        };
-    }
-
-    if ( exists $h_entity_response->{url} ) {
-        return {
-            url => $h_entity_response->{url},
-        };
-    }
-
-    my $adapter_class  = 'UI::Web::' . ucfirst($entity);
-    my $adapter_method = $h_entity_response->{action};
-    if ( !$adapter_class->can($adapter_method) ) {
-        return {
-            err => __PACKAGE__ . ": $adapter_class failed to '$adapter_method'",
-        };
-    }
-
-    return $adapter_class->new( app => $self->app )->$adapter_method(
-        req_params => $o_params,
-        data       => $h_entity_response->{data},
-    );
-}
-
-#
-# returns to Controller
-#
-sub generate {
-    my ($self) = @_;
-
-    return UI::Web::Page->new( app => $self->app )->gen_pages();
+    return ( $entity, $o_params );
 }
 
 sub _parse_path {
@@ -85,6 +49,52 @@ sub _parse_path {
     }
 
     return $chunk2;
+}
+
+#
+# result can contain one of:
+#   url   - will be redirected
+#   err   - will be rendered as page
+#   body  - will be rendered as page
+#
+sub build_response {
+    my ( $self, $entity, $o_params, $h_entity_response ) = @_;
+
+    if ( exists $h_entity_response->{err} ) {
+        return {
+            err => $h_entity_response->{err},
+        };
+    }
+
+    if ( exists $h_entity_response->{url} ) {
+        return {
+            url => $h_entity_response->{url},
+        };
+    }
+
+    my $adapter_class  = 'UI::Web::' . ucfirst($entity);
+    my $adapter_method = $h_entity_response->{action};
+    if ( !$adapter_class->can($adapter_method) ) {
+        return {
+            err => "$adapter_class can not '$adapter_method'",
+        };
+    }
+
+    my $h_result = $adapter_class->new( app => $self->app )->$adapter_method(
+        req_params => $o_params,
+        data       => $h_entity_response->{data},
+    );
+
+    return $h_result;
+}
+
+#
+# returns to Controller
+#
+sub generate {
+    my ($self) = @_;
+
+    return UI::Web::Page->new( app => $self->app )->gen_pages();
 }
 
 1;
