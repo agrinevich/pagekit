@@ -3,6 +3,7 @@ package Ctl;
 use Carp qw(carp croak);
 use Entity::Page;
 use Entity::Pagemark;
+use Entity::Pagefile;
 use Entity::Lang;
 
 use Moo;

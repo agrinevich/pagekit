@@ -1,6 +1,9 @@
 <tr>
-    <td align="center"><a href="/admin/page?do=del&id=[% id %]" style="color:red"
-            onclick="return confirm('Delete?')">X</a></td>
-    <td>[% dash %] <a href="/admin/page?do=one&id=[% id %]" class="admin-catlink-[% color_mode %]">[% name %]</a></td>
-    <td><a href="/admin/pagemark?do=list&fltr_page_id=[% id %]">marks</a></td>
+    <td>
+        [% dash %]
+        [ <a href="/admin/page?do=del&id=[% id %]" style="color:red" onclick="return confirm('Delete?')">X</a> ]
+        <a href="/admin/page?do=one&id=[% id %]" class="admin-catlink-[% color_mode %]">[% name %]</a>
+    </td>
+    <td> <a href="/admin/pagemark?do=list&fltr_page_id=[% id %]">marks</a></td>
+    <td> <a href="/admin/pagefile?do=list&fltr_page_id=[% id %]">files</a> </td>
 </tr>

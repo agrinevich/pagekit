@@ -2,23 +2,27 @@
 
 [% msg_text %]
 
-<form name="page-add" action="/admin/page" method="POST">
-    <input type="hidden" name="do" value="add">
-    Nick: <input type="text" name="nick" size="24">
-    Name: <input type="text" name="name" size="24">
-    <select name="parent_id">
-        [% options %]
-    </select>
-    <input type="submit" value="Add">
-</form>
-
-<hr noshade size="1">
+<table>
+    <tr style="background-color:lightgreen;">
+        <td>
+            <form name="page-add" action="/admin/page" method="POST">
+                <input type="hidden" name="do" value="add">
+                Nick: <input type="text" name="nick" size="24">
+                Name: <input type="text" name="name" size="24">
+                <select name="parent_id">
+                    [% options %]
+                </select>
+                <input type="submit" value="Add">
+            </form>
+        </td>
+    </tr>
+</table>
 
 <table>
     <tr>
-        <th>delete<br>page</th>
         <th>page<br>properties</th>
-        <th>page<br>content</th>
+        <th>page<br>marks</th>
+        <th>page<br>files</th>
     </tr>
     [% list %]
 </table>

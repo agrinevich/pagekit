@@ -10,14 +10,16 @@
         <th>nick</th>
         <th>action</th>
     </tr>
+
     <form name="lang-add" action="/admin/lang" method="POST">
         <input type="hidden" name="do" value="add">
-        <tr>
+        <tr style="background-color:lightgreen;">
             <td><input type="text" name="isocode" size="24"></td>
             <td><input type="text" name="nick" size="24"></td>
             <td align="center"><input type="submit" value=" Add "></td>
         </tr>
     </form>
+
     [% list %]
 </table>
 <br>
