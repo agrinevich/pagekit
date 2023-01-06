@@ -16,10 +16,8 @@ our $VERSION = '0.2';
 #
 # uih - User Interface Handler (web, cli, api)
 # sh  - Storage Handler (memory, file, database)
+# gh  - Generator Handler (writing pages on disk)
 #
-# Request from UI passes via Controller to Entities (Page, Lang, etc)
-# and then response goes from Entities via Controller to UI.
-# Entities and UI read/write to Storage via Controller.
 
 has 'uih' => (
     is       => 'ro',
@@ -31,7 +29,24 @@ has 'sh' => (
     required => 1,
 );
 
-sub dispatch {
+has 'gh' => (
+    is       => 'ro',
+    required => 1,
+);
+
+sub process_ui {
+    my ( $self, $o_request ) = @_;
+
+    my ( $entity, $params ) = $self->uih->parse_request($o_request);
+
+    my $h_entity_response = $self->ask_entity( $entity, $params );
+
+    my $h_result = $self->uih->build_response( $entity, $params, $h_entity_response );
+
+    return $h_result;
+}
+
+sub ask_entity {
     my ( $self, $entity, $o_params ) = @_;
 
     my $class  = 'Entity::' . ucfirst($entity);
@@ -39,7 +54,7 @@ sub dispatch {
 
     if ( !$class->can($action) ) {
         return {
-            err => "Ctl failed to dispatch: '$class' cannot '$action'",
+            err => "Ctl failed to ask_entity: '$class' cannot '$action'",
         };
     }
 

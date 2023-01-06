@@ -1,4 +1,4 @@
-package UI::Web::Renderer;
+package Generator::Renderer;
 
 use strict;
 use warnings;
@@ -21,12 +21,12 @@ sub parse_html {
     my $tpl_name = $args{tpl_name};
     my $h_vars   = $args{h_vars};
 
-    # gmarks are global marks with 'default' values
-    my $h_gmarks = _gmarks( dir => $root_dir . $tpl_path . '/global' );
+    # global marks with 'default' values
+    my $h_global = _global( dir => $root_dir . $tpl_path . '/global' );
 
     my %merged = ();
-    if ( scalar keys %{$h_gmarks} ) {
-        %merged = %{$h_gmarks};
+    if ( scalar keys %{$h_global} ) {
+        %merged = %{$h_global};
 
         # override it if you have another mark value for current page
         while ( my ( $k, $v ) = each( %{$h_vars} ) ) {
@@ -51,7 +51,7 @@ sub parse_html {
     return $tx->render( $tpl_name, \%merged ) || croak __PACKAGE__ . ' failed to parse_html';
 }
 
-sub _gmarks {
+sub _global {
     my (%args) = @_;
 
     my $dir = $args{dir};
@@ -71,6 +71,26 @@ sub _gmarks {
     }
 
     return \%result;
+}
+
+sub write_html {
+    my ( $h_vars, $h_args ) = @_;
+
+    my $root_dir = $h_args->{root_dir};
+    my $tpl_path = $h_args->{tpl_path};
+    my $tpl_file = $h_args->{tpl_file};
+    my $out_file = $h_args->{out_file};
+
+    my $html = parse_html(
+        root_dir => $root_dir,
+        tpl_path => $tpl_path,
+        tpl_name => $tpl_file,
+        h_vars   => $h_vars,
+    );
+
+    path($out_file)->spew_utf8($html);
+
+    return;
 }
 
 1;
