@@ -1,4 +1,4 @@
-<h1>Page "[% page_name %]" marks</h1>
+<h1>Page "[% page_name %]" marks and files</h1>
 
 [% msg_text %]
 
@@ -8,22 +8,53 @@
     </tr>
 </table>
 
-<table>
-    <tr>
-        <th>name</th>
-        <th>value</th>
-        <th>action</th>
-    </tr>
-    <form name="pagemark-add" action="/admin/pagemark" method="POST">
-        <input type="hidden" name="do" value="add">
-        <input type="hidden" name="page_id" value="[% page_id %]">
-        <input type="hidden" name="lang_id" value="[% lang_slctd %]">
+<br clear="all">
+
+<div style="width: 60%; float: left;">
+
+
+    <table>
         <tr>
-            <td><input type="text" name="name" size="32"></td>
-            <td><textarea name="value" rows="1" cols="40"></textarea></td>
-            <td align="center"><input type="submit" value=" Add "></td>
+            <th>name</th>
+            <th>value</th>
+            <th>action</th>
         </tr>
-    </form>
-    [% list %]
-</table>
-<br>
+        <form name="pagemark-add" action="/admin/pagemark" method="POST">
+            <input type="hidden" name="do" value="add">
+            <input type="hidden" name="page_id" value="[% page_id %]">
+            <input type="hidden" name="lang_id" value="[% lang_slctd %]">
+            <tr>
+                <td><input type="text" name="name" size="16"></td>
+                <td><textarea name="value" rows="1" cols="40"></textarea></td>
+                <td align="center"><input type="submit" value=" Add "></td>
+            </tr>
+        </form>
+        [% list %]
+    </table>
+
+
+</div>
+
+<div style="width: 40%;  float: left;">
+
+    <table>
+        <tr>
+            <th>file</th>
+            <th>size</th>
+            <th>action</th>
+        </tr>
+        <form name="pagefile-add" action="/admin/page" method="POST">
+            <input type="hidden" name="do" value="upload">
+            <input type="hidden" name="page_id" value="[% page_id %]">
+            <input type="hidden" name="lang_id" value="[% lang_slctd %]">
+            <tr>
+                <td colspan="2"><input type="file" name="file" size="16"></td>
+                <td align="center"><input type="submit" value=" Upload "></td>
+            </tr>
+        </form>
+        [% files %]
+    </table>
+
+</div>
+
+<br clear="all">

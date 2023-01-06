@@ -55,12 +55,15 @@ sub list {
         },
     );
 
+    my $files = q{};
+
     my $html_body = UI::Web::Renderer::parse_html(
         root_dir => $root_dir,
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         tpl_name => 'list.html',
         h_vars   => {
             list       => $list,
+            files      => $files,
             page_id    => $page_id,
             page_name  => $h_page->{name},
             lang_links => $lang_links,
