@@ -23,32 +23,38 @@ sub parse_request {
     my $entity = _parse_path( $o_request->path_info() );
 
     my $o_params = $o_request->parameters();
+
+    if ( !scalar keys %{$o_params} && !$entity ) {
+        $entity = 'page';
+    }
+
     if ( !exists $o_params->{do} ) {
         $o_params->{do} = 'list';
     }
 
-    return ( $entity, $o_params );
+    my $o_uploads = $o_request->uploads();
+
+    return ( $entity, $o_params, $o_uploads );
 }
 
+# /admin/something
 sub _parse_path {
     my ($path_info) = @_;
 
     my @path_chunks = split m{\/}, $path_info;
 
-    # drop empty first chunk ???
+    # if we have empty first chunk - drop it
     if ( !length $path_chunks[0] ) {
         shift @path_chunks;
     }
 
-    my $chunk2 = $path_chunks[1];
-    # $chunk2 =~ s/\W//g;
+    # first part is always 'admin' (its Admin application)
+    # drop it
+    shift @path_chunks;
 
-    # default entity is 'page'
-    if ( !$chunk2 ) {
-        $chunk2 = 'page';
-    }
+    my $entity = shift @path_chunks;
 
-    return $chunk2;
+    return $entity;
 }
 
 #
