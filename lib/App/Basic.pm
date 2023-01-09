@@ -5,6 +5,7 @@ package App::Basic;
 #
 
 use App::Config;
+use App::Files;
 
 use Moo;
 use namespace::clean;
@@ -31,5 +32,17 @@ has 'config' => (
         );
     },
 );
+
+sub get_files {
+    my ( $self, %args ) = @_;
+
+    my $path = $args{path};
+    my $dir  = $self->root_dir . $path;
+
+    return App::Files::get_files(
+        dir => $dir,
+        %args
+    );
+}
 
 1;
