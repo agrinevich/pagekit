@@ -4,6 +4,7 @@ use Carp qw(carp croak);
 use Entity::Page;
 use Entity::Pagemark;
 use Entity::Lang;
+use Entity::File;
 
 use Moo;
 use namespace::clean;
@@ -39,7 +40,7 @@ sub process_ui {
     my ( $entity, $params, $uploads ) = $self->uih->parse_request($o_request);
 
     my $h_response;
-    if ($entity) { $h_response = $self->ask_entity( $entity, $params ); }
+    if ($entity) { $h_response = $self->ask_entity( $entity, $params, $uploads ); }
     else         { $h_response = $self->ask_app( $params, $uploads ); }
 
     my $h_result = $self->uih->build_response( $entity, $params, $h_response );
