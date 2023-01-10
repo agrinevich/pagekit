@@ -68,6 +68,10 @@ sub stop {
 sub init {
     my ( undef, $o_conf, $h_args ) = @_;
 
+    #
+    # TODO: create dirs 'log', 'tmp', 'html'
+    #
+
     my $strg_type = $o_conf->{storage}->{type};
 
     if ( $strg_type eq 'sqlite' ) {
