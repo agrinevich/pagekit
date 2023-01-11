@@ -1,0 +1,24 @@
+<h1>Templates</h1>
+
+[% msg_text %]
+
+<hr noshade size="1">
+
+<table>
+    <tr>
+        <td>
+            [% list %]
+        </td>
+        <td>
+            <form name="tpl-upd" action="/admin/file" method="POST">
+                <input type="hidden" name="do" value="tplupdate">
+                <input type="hidden" name="f_cur" value="[% f_cur %]">
+                <textarea name="f_body" rows="30" cols="120">[% f_body %]</textarea>
+                <br>
+                <input type="submit" value="Update">
+            </form>
+
+        </td>
+    </tr>
+</table>
+<br>

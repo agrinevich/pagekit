@@ -1,6 +1,9 @@
 package Entity::File;
 
 use Carp qw(carp croak);
+
+use App::Files;
+
 use Moo;
 use namespace::clean;
 
@@ -21,57 +24,80 @@ has 'size' => (
     default => undef,
 );
 
-# sub list {
-#     my ( $self, $h_filters ) = @_;
+sub templates {
+    my ( $self, $params ) = @_;
 
-#     # extract filters
-#     my %filters;
-#     foreach my $k ( keys %{$h_filters} ) {
-#         if ( $k =~ /^fltr/i ) {
-#             my @k_parts = split /\_/, $k;
-#             shift @k_parts;
-#             my $field = join q{_}, @k_parts;
+    my $app = $self->ctl->uih->app;
 
-#             $filters{$field} = $h_filters->{$k};
-#         }
-#     }
+    my $tpl_path = $app->config->{path}->{templates} . '/g';
+    # my $root_dir = $app->root_dir;
 
-#     my ( $h_table, $err_str ) = $self->ctl->sh->list( 'page', \%filters );
-#     if ($err_str) {
-#         return {
-#             err => $err_str,
-#         };
-#     }
+    my $f_cur  = $params->{f} // q{};
+    my $f_body = q{};
+    if ($f_cur) {
+        $f_body = $self->ctl->gh->read_file(
+            path => $tpl_path,
+            file => $f_cur,
+        );
+    }
 
-#     return {
-#         action => 'list',
-#         data   => $h_table,
-#     };
-# }
+    my $h_files = {};
 
-# sub one {
-#     my ($self) = @_;
+    my $a_rootfiles = $self->ctl->gh->get_files(
+        path       => $tpl_path,
+        files_only => 1,
+    );
+    $h_files->{''} = $a_rootfiles;
 
-#     if ( !$self->id ) {
-#         return {
-#             err => 'id is required to fetch one page',
-#         };
-#     }
+    my $a_dirs = $self->ctl->gh->get_files(
+        path      => $tpl_path,
+        dirs_only => 1,
+    );
+    foreach my $h_dir ( @{$a_dirs} ) {
+        my $dname = $h_dir->{name};
 
-#     my ( $h_data, $err_str ) = $self->ctl->sh->one( 'page', $self->id );
-#     if ($err_str) {
-#         return {
-#             err => $err_str,
-#         };
-#     }
+        my $a_files = $self->ctl->gh->get_files(
+            path       => $tpl_path . q{/} . $dname,
+            files_only => 1,
+        );
+        $h_files->{$dname} = $a_files;
+    }
 
-#     $h_data->{ctl} = $self->ctl;
+    my $h_data = {
+        h_files => $h_files,
+        f_cur   => $f_cur,
+        f_body  => $f_body,
+    };
 
-#     return {
-#         action => 'one',
-#         data   => $h_data,
-#     };
-# }
+    return {
+        action => 'templates',
+        data   => $h_data,
+    };
+}
+
+sub tplupdate {
+    my ( $self, $params ) = @_;
+
+    my $app = $self->ctl->uih->app;
+
+    my $tpl_path = $app->config->{path}->{templates} . '/g';
+
+    my $f_cur  = $params->{f_cur}  || q{};
+    my $f_body = $params->{f_body} || q{};
+
+    $self->ctl->gh->write_file(
+        path   => $tpl_path,
+        file   => $f_cur,
+        f_body => $f_body,
+    );
+
+    my $url = $app->config->{site}->{host} . '/admin/file?do=templates';
+    $url .= '&f=' . $f_cur;
+
+    return {
+        url => $url,
+    };
+}
 
 sub upload {
     my ( $self, $params, $uploads ) = @_;
@@ -98,23 +124,10 @@ sub upload {
     my $html_path = $app->config->{path}->{html};
     my $page_dir  = $app->root_dir . $html_path . $lang_path . $h_page->{path};
 
-    my $file = $uploads->{file};
-
-    my $file_name = $file->basename;
-    my @chunks    = split /[.]/, $file_name;
-    my $ext       = pop @chunks;
-    my $name      = join q{}, @chunks;
-    $name =~ s/[^\w\-\_]//g;
-    if ( !$name ) {
-        $name = time;
-    }
-
-    my $file_tmp = $file->path();
-    my $new_file = $page_dir . q{/} . $name . q{.} . $ext;
-    rename $file_tmp, $new_file;
-
-    my $mode_readable = oct '644';
-    chmod $mode_readable, $new_file;
+    $self->ctl->gh->upload_file(
+        dir     => $page_dir,
+        uploads => $uploads,
+    );
 
     my $url = $app->config->{site}->{host} . '/admin/pagemark?do=list';
     $url .= '&fltr_page_id=' . $params->{page_id};
@@ -167,33 +180,6 @@ sub remove {
         url => $url,
     };
 }
-
-#
-# recursive
-#
-# sub _build_path {
-#     my ( $self, %args ) = @_;
-
-#     my $id = $args{id};
-
-#     my ( $h_data, $err_str ) = $self->ctl->sh->one( 'page', $id );
-#     if ( !$h_data ) {
-#         return q{};
-#     }
-
-#     my $parent_id = $h_data->{parent_id} // 0;
-#     my $nick      = $h_data->{nick};
-
-#     my $path = $nick ? q{/} . $nick : q{};
-
-#     if ( $parent_id > 0 ) {
-#         $path = $self->_build_path(
-#             id => $parent_id,
-#         ) . $path;
-#     }
-
-#     return $path;
-# }
 
 # sub generate {
 #     my ($self) = @_;
