@@ -6,7 +6,7 @@ use warnings;
 use Const::Fast;
 use Carp qw(croak carp);
 use Path::Tiny; # path, spew_utf8
-use Text::Xslate qw(mark_raw);
+use Text::Xslate qw(mark_raw html_escape);
 # use Data::Dumper;
 
 use App::Files;
@@ -71,6 +71,11 @@ sub _gmarks {
     }
 
     return \%result;
+}
+
+sub do_escape {
+    my ($str) = @_;
+    return html_escape($str);
 }
 
 1;

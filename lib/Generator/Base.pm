@@ -6,6 +6,7 @@ use POSIX qw(strftime);
 
 use Generator::Renderer;
 use Generator::Standard;
+use App::Files;
 
 use Moo;
 use namespace::clean;
@@ -367,6 +368,64 @@ sub _lang_links {
     }
 
     return ( $lang_links, $meta_tags );
+}
+
+sub get_files {
+    my ( $self, %args ) = @_;
+
+    my $path = $args{path};
+    my $dir  = $self->app->root_dir . $path;
+
+    return App::Files::get_files(
+        dir => $dir,
+        %args
+    );
+}
+
+sub read_file {
+    my ( $self, %args ) = @_;
+
+    my $file = $self->app->root_dir . $args{path} . q{/} . $args{file};
+
+    return App::Files::read_file( file => $file );
+}
+
+sub write_file {
+    my ( $self, %args ) = @_;
+
+    my $file = $self->app->root_dir . $args{path} . q{/} . $args{file};
+
+    return App::Files::write_file(
+        file => $file,
+        body => $args{f_body},
+    );
+}
+
+sub upload_file {
+    my ( $self, %args ) = @_;
+
+    my $page_dir = $args{dir};
+    my $uploads  = $args{uploads};
+
+    my $file = $uploads->{file};
+
+    my $file_name = $file->basename;
+    my @chunks    = split /[.]/, $file_name;
+    my $ext       = pop @chunks;
+    my $name      = join q{}, @chunks;
+    $name =~ s/[^\w\-\_]//g;
+    if ( !$name ) {
+        $name = time;
+    }
+
+    my $file_tmp = $file->path();
+    my $new_file = $page_dir . q{/} . $name . q{.} . $ext;
+    rename $file_tmp, $new_file;
+
+    my $mode_readable = oct '644';
+    chmod $mode_readable, $new_file;
+
+    return;
 }
 
 1;

@@ -62,7 +62,7 @@ sub list {
         my $page_path = $lang_path . $h_page->{path};
         my $html_path = $self->app->config->{path}->{html};
 
-        my $a_files = $self->app->get_files(
+        my $a_files = $self->app->ctl->gh->get_files(
             path       => $html_path . $page_path,
             files_only => 1,
         );
