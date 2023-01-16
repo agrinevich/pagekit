@@ -1,8 +1,9 @@
+# TODO: rename to Filemanager
 package Entity::File;
 
 use Carp qw(carp croak);
-
-use App::Files;
+use POSIX ();
+use POSIX qw(strftime);
 
 use Moo;
 use namespace::clean;
@@ -96,6 +97,221 @@ sub tplupdate {
 
     return {
         url => $url,
+    };
+}
+
+sub backups {
+    my ( $self, $params ) = @_;
+
+    my $app = $self->ctl->gh->app;
+
+    my $bkps_path = $app->config->{path}->{bkp};
+
+    my $a_bkps = $self->ctl->gh->get_files(
+        path       => $bkps_path,
+        files_only => 1,
+    );
+
+    #
+    # TODO: sort by file name
+    #
+
+    return {
+        action => 'backups',
+        data   => $a_bkps,
+    };
+}
+
+# TODO: check for errors at every stage
+sub bkpcreate {
+    my ( $self, $params ) = @_;
+
+    my $app         = $self->ctl->gh->app;
+    my $root_dir    = $app->root_dir;
+    my $bkps_path   = $app->config->{path}->{bkp};
+    my $site_domain = $app->config->{site}->{domain};
+
+    my $bkp_name = strftime( '%Y%m%d-%H%M%S', localtime );
+    my $bkp_path = $bkps_path . q{/} . $bkp_name;
+
+    # 1. create templates backup
+    {
+        my $tpl_path = $app->config->{path}->{templates} . '/g';
+
+        my $tplbkp_path = $bkp_path . '/tpl';
+        $self->ctl->gh->make_path( path => $tplbkp_path );
+
+        $self->ctl->gh->copy_dir(
+            src_path => $tpl_path,
+            dst_path => $tplbkp_path,
+        );
+    }
+
+    # 2. create database backup
+    {
+        # $self->ctl->gh->make_path( path => $bkp_path );
+        $self->ctl->sh->backup_create( path => $bkp_path );
+    }
+
+    # 3. create html dir backup
+    {
+        my $html_path = $app->config->{path}->{html};
+
+        my $htmlbkp_path = $bkp_path . '/html';
+        $self->ctl->gh->make_path( path => $htmlbkp_path );
+
+        $self->ctl->gh->copy_dir(
+            src_path => $html_path,
+            dst_path => $htmlbkp_path,
+        );
+    }
+
+    # 4. archive
+    {
+        my $bkp_result = $self->ctl->gh->create_zip(
+            src_path => $bkp_path,
+            dst_path => $bkps_path,
+            name     => $site_domain . q{_} . $bkp_name,
+        );
+
+        $self->ctl->gh->empty_dir( path => $bkp_path );
+
+        rmdir $root_dir . $bkp_path;
+    }
+
+    return {
+        url => $app->config->{site}->{host} . '/admin/file?do=backups&msg=success',
+    };
+}
+
+sub bkpdelete {
+    my ( $self, $params ) = @_;
+
+    my $fname = $params->{name};
+
+    my $app       = $self->ctl->gh->app;
+    my $bkps_path = $app->config->{path}->{bkp};
+
+    $self->ctl->gh->delete_file(
+        file_path => $bkps_path . q{/} . $fname,
+    );
+
+    return {
+        url => $app->config->{site}->{host} . '/admin/file?do=backups&msg=success',
+    };
+}
+
+sub bkpdownload {
+    my ( $self, $params ) = @_;
+
+    my $fname = $params->{name};
+
+    my $app       = $self->ctl->gh->app;
+    my $bkps_path = $app->config->{path}->{bkp};
+
+    my $fh = $self->ctl->gh->get_fh(
+        file_path => $bkps_path . q{/} . $fname,
+        mode      => q{<},
+        binmode   => q{:raw},
+    );
+
+    if ( !$fh ) {
+        return {
+            url => $app->config->{site}->{host} . '/admin/file?do=backups&msg=error',
+        };
+    }
+
+    return {
+        action => 'bkpdownload',
+        data   => {
+            fhandle => $fh,
+            fname   => $fname,
+        },
+    };
+}
+
+sub bkpupload {
+    my ( $self, $params, $uploads ) = @_;
+
+    if ( !$uploads->{file} ) {
+        return {
+            err => 'file is required',
+        };
+    }
+
+    $self->ctl->gh->upload_bkpfile(
+        uploads => $uploads,
+    );
+
+    my $app = $self->ctl->gh->app;
+
+    return {
+        url => $app->config->{site}->{host} . '/admin/file?do=backups&msg=success',
+    };
+}
+
+sub bkprestore {
+    my ( $self, $params ) = @_;
+
+    my $fname = $params->{name} || q{-};
+
+    my $app       = $self->ctl->gh->app;
+    my $root_dir  = $app->root_dir;
+    my $bkps_path = $app->config->{path}->{bkp};
+
+    my $err = $self->ctl->gh->extract_bkp(
+        src_path => $bkps_path . q{/} . $fname,
+        dst_path => $bkps_path,
+    );
+    if ($err) {
+        return {
+            err => $err,
+        };
+    }
+
+    # backup is extracted here
+    my ( $bkp_name, undef ) = split /\./, $fname;
+    my $tmp_path = $bkps_path . q{/} . $bkp_name;
+
+    # restore templates
+    {
+        my $src_path = $tmp_path . '/tpl';
+        my $dst_path = $app->config->{path}->{templates} . '/g';
+
+        $self->ctl->gh->copy_dir(
+            src_path => $src_path,
+            dst_path => $dst_path,
+        );
+    }
+
+    # restore html
+    {
+        $self->ctl->gh->empty_dir(
+            path => $app->config->{path}->{html},
+        );
+
+        my $src_path = $tmp_path . '/html';
+        my $dst_path = $app->config->{path}->{html};
+
+        $self->ctl->gh->copy_dir(
+            src_path => $src_path,
+            dst_path => $dst_path,
+        );
+    }
+
+    # restore storage
+    {
+        my $src_path = $tmp_path;
+        $self->ctl->sh->backup_restore( path => $src_path );
+    }
+
+    $self->ctl->gh->empty_dir(
+        path => $tmp_path,
+    );
+    rmdir( $root_dir . $tmp_path );
+
+    return {
+        url => $app->config->{site}->{host} . '/admin/file?do=backups&msg=success',
     };
 }
 

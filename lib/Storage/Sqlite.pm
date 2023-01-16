@@ -2,6 +2,7 @@ package Storage::Sqlite;
 
 use Carp qw(carp croak);
 use DBI;
+use DBD::SQLite;
 
 use Moo;
 use namespace::clean;
@@ -133,6 +134,30 @@ sub del {
     }
 
     my $rv = $self->dbh->do($del) or croak $self->dbh->errstr;
+
+    return;
+}
+
+sub backup_create {
+    my ( $self, %args ) = @_;
+
+    my $root_dir = $self->app->root_dir();
+
+    my $bkp_file = $root_dir . $args{path} . '/backup.sql';
+
+    $self->dbh->sqlite_backup_to_file($bkp_file);
+
+    return;
+}
+
+sub backup_restore {
+    my ( $self, %args ) = @_;
+
+    my $root_dir = $self->app->root_dir();
+
+    my $bkp_file = $root_dir . $args{path} . '/backup.sql';
+
+    $self->dbh->sqlite_backup_from_file($bkp_file);
 
     return;
 }
