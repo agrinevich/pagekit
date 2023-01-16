@@ -1,0 +1,26 @@
+<h1>Backups</h1>
+
+[% msg_text %]
+
+<hr noshade size="1">
+
+<table>
+    <tr>
+        <th colspan="2">
+            <form name="bkp-create" action="/admin/file" method="GET">
+                <input type="hidden" name="do" value="bkpcreate">
+                <input type="submit" value="Backup Now">
+            </form>
+        </th>
+        <th colspan="2">
+            <form name="bkp-upload" action="/admin/file" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="do" value="bkpupload">
+                <input type="file" name="file">
+                <input type="submit" value="Upload Backup">
+            </form>
+        </th>
+    </tr>
+    [% list %]
+</table>
+
+<br>

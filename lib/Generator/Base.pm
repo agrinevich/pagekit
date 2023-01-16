@@ -370,6 +370,44 @@ sub _lang_links {
     return ( $lang_links, $meta_tags );
 }
 
+sub make_path {
+    my ( $self, %args ) = @_;
+
+    my $path = $self->app->root_dir . $args{path};
+
+    return App::Files::make_path( path => $path );
+}
+
+sub copy_dir {
+    my ( $self, %args ) = @_;
+
+    my $src_dir = $self->app->root_dir . $args{src_path};
+    my $dst_dir = $self->app->root_dir . $args{dst_path};
+
+    return App::Files::copy_dir_recursive(
+        src_dir => $src_dir,
+        dst_dir => $dst_dir,
+    );
+}
+
+sub empty_dir {
+    my ( $self, %args ) = @_;
+
+    my $dir = $self->app->root_dir . $args{path};
+
+    return App::Files::empty_dir_recursive( dir => $dir );
+}
+
+sub create_zip {
+    my ( $self, %args ) = @_;
+
+    return App::Files::create_zip(
+        src_dir => $self->app->root_dir . $args{src_path},
+        dst_dir => $self->app->root_dir . $args{dst_path},
+        name    => $args{name},
+    );
+}
+
 sub get_files {
     my ( $self, %args ) = @_;
 
@@ -379,6 +417,21 @@ sub get_files {
     return App::Files::get_files(
         dir => $dir,
         %args
+    );
+}
+
+sub get_fh {
+    my ( $self, %args ) = @_;
+
+    my $file = $self->app->root_dir . $args{file_path};
+    if ( !-e $file ) {
+        return;
+    }
+
+    return App::Files::file_handle(
+        file    => $file,
+        mode    => $args{mode},
+        binmode => $args{binmode},
     );
 }
 
@@ -401,6 +454,59 @@ sub write_file {
     );
 }
 
+sub delete_file {
+    my ( $self, %args ) = @_;
+
+    my $file = $self->app->root_dir . $args{file_path};
+
+    unlink $file;
+
+    return;
+}
+
+sub upload_bkpfile {
+    my ( $self, %args ) = @_;
+
+    my $uploads = $args{uploads};
+
+    my $file = $uploads->{file};
+
+    my ( $fname, $ext );
+    {
+        # not required for backups but who knows
+        my @chunks = split /[.]/, $file->basename;
+        $ext   = pop @chunks;
+        $fname = join q{}, @chunks;
+        $fname =~ s/[^\w\-\_]//g;
+        if ( !$fname ) {
+            $fname = time;
+        }
+    }
+
+    my $file_tmp = $file->path();
+
+    my $root_dir  = $self->app->root_dir;
+    my $bkps_path = $self->app->config->{path}->{bkp};
+    my $file_dst  = $root_dir . $bkps_path . q{/} . $fname . q{.} . $ext;
+    rename $file_tmp, $file_dst;
+
+    return;
+}
+
+sub extract_bkp {
+    my ( $self, %args ) = @_;
+
+    my $root_dir = $self->app->root_dir;
+
+    return App::Files::extract_zip(
+        file    => $root_dir . $args{src_path},
+        dst_dir => $root_dir . $args{dst_path},
+    );
+}
+
+#
+# TODO: rename to upload_pagefile
+#
 sub upload_file {
     my ( $self, %args ) = @_;
 
@@ -419,11 +525,11 @@ sub upload_file {
     }
 
     my $file_tmp = $file->path();
-    my $new_file = $page_dir . q{/} . $name . q{.} . $ext;
-    rename $file_tmp, $new_file;
+    my $file_dst = $page_dir . q{/} . $name . q{.} . $ext;
+    rename $file_tmp, $file_dst;
 
     my $mode_readable = oct '644';
-    chmod $mode_readable, $new_file;
+    chmod $mode_readable, $file_dst;
 
     return;
 }

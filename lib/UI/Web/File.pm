@@ -31,7 +31,7 @@ sub templates {
     my $root_dir = $self->app->root_dir;
     my $tpl_path = $self->app->config->{path}->{templates};
 
-    my $list = _build_list(
+    my $list = _tpl_list(
         root_dir => $root_dir,
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         a_items  => $h_files,
@@ -62,7 +62,7 @@ sub templates {
     };
 }
 
-sub _build_list {
+sub _tpl_list {
     my (%args) = @_;
 
     my $root_dir = $args{root_dir} // q{};
@@ -98,6 +98,83 @@ sub _build_list {
     }
 
     return $result;
+}
+
+sub backups {
+    my ( $self, %args ) = @_;
+
+    my $a_bkps = $args{data};
+
+    my $root_dir = $self->app->root_dir;
+    my $tpl_path = $self->app->config->{path}->{templates};
+
+    my $list = _bkp_list(
+        root_dir => $root_dir,
+        tpl_path => $tpl_path . q{/} . $_ENTITY,
+        a_items  => $a_bkps,
+    );
+
+    my $html_body = UI::Web::Renderer::parse_html(
+        root_dir => $root_dir,
+        tpl_path => $tpl_path . q{/} . $_ENTITY,
+        tpl_name => 'backups.html',
+        h_vars   => {
+            list => $list,
+        },
+    );
+
+    my $res = UI::Web::Renderer::parse_html(
+        root_dir => $root_dir,
+        tpl_path => $tpl_path,
+        tpl_name => 'layout.html',
+        h_vars   => {
+            body_html => $html_body,
+        },
+    );
+
+    return {
+        body => $res,
+    };
+}
+
+sub _bkp_list {
+    my (%args) = @_;
+
+    my $root_dir = $args{root_dir} // q{};
+    my $tpl_path = $args{tpl_path} // q{};
+    my $a_bkps   = $args{a_items}  // {};
+
+    my $result   = q{};
+    my $tpl_item = q{};
+
+    foreach my $h_bkp ( sort @{$a_bkps} ) {
+        $result .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => 'backups-item.html',
+            h_vars   => {
+                name => $h_bkp->{name},
+                size => $h_bkp->{size},
+            },
+        );
+    }
+
+    return $result;
+}
+
+sub bkpdownload {
+    my ( $self, %args ) = @_;
+
+    my $fhandle = $args{data}->{fhandle};
+    my $fname   = $args{data}->{fname};
+
+    return {
+        body             => $fhandle,
+        file_name        => $fname,
+        is_encoded       => 1,
+        content_type     => 'application/zip',
+        content_encoding => 'zip',
+    };
 }
 
 1;

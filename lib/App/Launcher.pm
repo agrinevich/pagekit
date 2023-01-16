@@ -68,16 +68,18 @@ sub stop {
 sub init {
     my ( undef, $o_conf, $h_args ) = @_;
 
-    #
-    # TODO: create dirs 'log', 'tmp', 'html'
-    #
+    my $root_dir = $h_args->{root_dir};
+
+    App::Files::make_path( path => $root_dir . $o_conf->{path}->{bkp} );
+    App::Files::make_path( path => $root_dir . $o_conf->{path}->{html} );
+    App::Files::make_path( path => $root_dir . $o_conf->{path}->{tpl} );
+    App::Files::make_path( path => $root_dir . '/log' );
 
     my $strg_type = $o_conf->{storage}->{type};
 
     if ( $strg_type eq 'sqlite' ) {
         my $strg_path = $o_conf->{storage}->{path};
         my $strg_name = $o_conf->{storage}->{name};
-        my $root_dir  = $h_args->{root_dir};
 
         my $db_file  = $root_dir . $strg_path . q{/} . $strg_name;
         my $sql_file = $root_dir . $strg_path . q{/} . 'init.sql';

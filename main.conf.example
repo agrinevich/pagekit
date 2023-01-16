@@ -5,6 +5,7 @@ host   = http://site.com
 [path]
 templates = /tpl
 html      = /html
+bkp       = /bkp
 
 [admin]
 user    = admin
