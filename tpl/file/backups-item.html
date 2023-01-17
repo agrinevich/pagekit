@@ -2,17 +2,17 @@
     <td>
         <a href="/admin/file?do=bkpdownload&name=[% name %]">[% name %]</a>
     </td>
-    <td>
+    <td align="right">
+        [% size %]
+    </td>
+    <td align="center">
         <form name="bkp-delete" action="/admin/file" method="GET">
             <input type="hidden" name="do" value="bkpdelete">
             <input type="hidden" name="name" value="[% name %]">
-            <input type="submit" value="Delete" onclick="return confirm('Delete?')">
+            <input type="submit" value="Delete" onclick="return confirm('Delete [% name %] ?')">
         </form>
     </td>
-    <td>
-        [% size %]
-    </td>
-    <td>
+    <td align="center">
         <form name="bkp-restore" action="/admin/file" method="POST">
             <input type="hidden" name="do" value="bkprestore">
             <input type="hidden" name="name" value="[% name %]">
