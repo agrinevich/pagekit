@@ -2,25 +2,35 @@
 
 [% msg_text %]
 
-<hr noshade size="1">
-
 <table>
-    <tr>
-        <th colspan="2">
+    <tr style="background-color:lightgreen;">
+        <td width="50%">
             <form name="bkp-create" action="/admin/file" method="GET">
                 <input type="hidden" name="do" value="bkpcreate">
-                <input type="submit" value="Backup Now">
+                <input type="submit" value="Create Backup">
             </form>
-        </th>
-        <th colspan="2">
+        </td>
+        <td width="50%">
             <form name="bkp-upload" action="/admin/file" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="do" value="bkpupload">
                 <input type="file" name="file">
                 <input type="submit" value="Upload Backup">
             </form>
-        </th>
+        </td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+    </tr>
+    <tr>
+        <th>File</th>
+        <th>Size</th>
+        <th colspan="2">Action</th>
     </tr>
     [% list %]
 </table>
 
+<br>
+Click on file to download backup.
 <br>
