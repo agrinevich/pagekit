@@ -15,15 +15,15 @@
 
     <table>
         <tr>
-            <th>name</th>
-            <th>value</th>
-            <th>action</th>
+            <th>Mark</th>
+            <th>Value</th>
+            <th>Action</th>
         </tr>
         <form name="pagemark-add" action="/admin/pagemark" method="POST">
             <input type="hidden" name="do" value="add">
             <input type="hidden" name="page_id" value="[% page_id %]">
             <input type="hidden" name="lang_id" value="[% lang_slctd %]">
-            <tr>
+            <tr style="background-color:lightgreen;">
                 <td><input type="text" name="name" size="16"></td>
                 <td><textarea name="value" rows="1" cols="40"></textarea></td>
                 <td align="center"><input type="submit" value=" Add "></td>
@@ -39,15 +39,15 @@
 
     <table>
         <tr>
-            <th>file</th>
-            <th>size</th>
-            <th>action</th>
+            <th>File</th>
+            <th>Size</th>
+            <th>Action</th>
         </tr>
         <form name="pagefile-add" action="/admin/file" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="do" value="upload">
             <input type="hidden" name="page_id" value="[% page_id %]">
             <input type="hidden" name="lang_id" value="[% lang_slctd %]">
-            <tr>
+            <tr style="background-color:lightgreen;">
                 <td colspan="2"><input type="file" name="file" size="16"></td>
                 <td align="center"><input type="submit" value=" Upload "></td>
             </tr>

@@ -146,6 +146,10 @@ sub add {
     }
     $self->id($id);
 
+    #
+    # TODO: copy mark for all langs
+    #
+
     my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . '/admin/pagemark?do=list';
     $url .= '&fltr_page_id=' . $self->page_id;
