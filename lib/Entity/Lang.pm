@@ -95,6 +95,10 @@ sub add {
     }
     $self->id($id);
 
+    #
+    # TODO: copy all marks for new lang
+    #
+
     my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . q{/admin/lang?do=list};
 

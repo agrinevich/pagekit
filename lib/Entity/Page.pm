@@ -133,6 +133,10 @@ sub add {
     }
     $self->id($id);
 
+    #
+    # TODO: copy marks from parent page
+    #
+
     my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . q{/admin/page?do=list};
 
@@ -289,6 +293,9 @@ sub _build_path {
     my $parent_id = $h_data->{parent_id} // 0;
     my $nick      = $h_data->{nick};
 
+    #
+    # TODO: fix redundant slash for some cases
+    #
     my $path = $nick ? q{/} . $nick : q{};
 
     if ( $parent_id > 0 ) {

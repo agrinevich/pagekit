@@ -25,6 +25,9 @@ has 'size' => (
     default => undef,
 );
 
+#
+# TODO: create a way to add more 'global' templates via WebUI (upload or form adding)
+#
 sub templates {
     my ( $self, $params ) = @_;
 
@@ -122,7 +125,10 @@ sub backups {
     };
 }
 
+#
+# TODO: add configs to backup
 # TODO: check for errors at every stage
+#
 sub bkpcreate {
     my ( $self, $params ) = @_;
 
