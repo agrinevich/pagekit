@@ -21,6 +21,21 @@ has 'parent_id' => (
     default => undef,
 );
 
+has 'mod_id' => (
+    is      => 'rw',
+    default => 0,
+);
+
+has 'hidden' => (
+    is      => 'rw',
+    default => 0,
+);
+
+has 'prio' => (
+    is      => 'rw',
+    default => 0,
+);
+
 has 'nick' => (
     is      => 'rw',
     default => undef,
@@ -191,6 +206,9 @@ sub upd {
         'page', {
             id        => $self->id,
             parent_id => $self->parent_id,
+            hidden    => $self->hidden,
+            prio      => $self->prio,
+            mod_id    => $self->mod_id,
             nick      => $self->nick,
             name      => $self->name,
             path      => $self->path,
@@ -263,6 +281,10 @@ sub _go_del {
 
     #
     # TODO: del files
+    #
+
+    #
+    # TODO: del notes if any
     #
 
     my $err_str = $self->ctl->sh->del( 'page', { id => $self->id } );

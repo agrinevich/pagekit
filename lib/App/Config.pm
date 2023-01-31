@@ -26,11 +26,12 @@ sub get_config {
 }
 
 sub save_config {
-    my ( $h_args, $o_config ) = @_;
+    my (%args) = @_;
 
-    my $file = $h_args->{file};
+    my $file   = $args{file};
+    my $o_conf = $args{o_conf};
 
-    $o_config->write($file)
+    $o_conf->write($file)
         or croak( "Failed to write $file - " . Config::Tiny->errstr() );
 
     return;

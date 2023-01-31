@@ -26,7 +26,7 @@ sub list {
     my $root_dir = $self->app->root_dir;
     my $tpl_path = $self->app->config->{path}->{templates};
 
-    my $list = _build_list(
+    my $list = $self->_build_list(
         root_dir  => $root_dir,
         tpl_path  => $tpl_path . q{/} . $_ENTITY,
         tpl_item  => 'list-item.html',
@@ -35,7 +35,7 @@ sub list {
         level     => 0,
     );
 
-    my $options = _build_list(
+    my $options = $self->_build_list(
         root_dir  => $root_dir,
         tpl_path  => $tpl_path . q{/} . $_ENTITY,
         tpl_item  => 'option.html',
@@ -80,12 +80,19 @@ sub one {
 
     my ( $h_table, $err_str ) = $self->app->ctl->sh->list('page');
 
+    my ( $h_mods, $err_str2 ) = $self->app->ctl->sh->list('mod');
+    $h_mods->{0} = {
+        id   => 0,
+        app  => 'admin',
+        name => 'page',
+    };
+
     # parent can be anyone except itself
     my %filtered = %{$h_table};
     my $id       = $h_page->{id};
     delete $filtered{$id};
 
-    my $options = _build_list(
+    my $options = $self->_build_list(
         root_dir  => $root_dir,
         tpl_path  => $tpl_path . q{/} . $_ENTITY,
         tpl_item  => 'option.html',
@@ -94,13 +101,22 @@ sub one {
         level     => 0,
     );
 
+    my $mod_options = _build_list2(
+        root_dir => $root_dir,
+        tpl_path => $tpl_path . q{/} . $_ENTITY,
+        tpl_item => 'mod-option.html',
+        a_items  => $h_mods,
+        id_sel   => $h_page->{mod_id},
+    );
+
     my $html_body = UI::Web::Renderer::parse_html(
         root_dir => $root_dir,
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         tpl_name => 'edit.html',
         h_vars   => {
             %{$h_page},
-            options => $options,
+            options     => $options,
+            mod_options => $mod_options,
             # msg_text    => $msg_text,
         },
     );
@@ -123,7 +139,7 @@ sub one {
 # recursion - to build as tree
 #
 sub _build_list {
-    my (%args) = @_;
+    my ( $self, %args ) = @_;
 
     my $root_dir  = $args{root_dir}  // q{};
     my $tpl_item  = $args{tpl_item}  // q{};
@@ -149,6 +165,21 @@ sub _build_list {
             next;
         }
 
+        my $mod_link = q{};
+        if ( $h->{mod_id} ) {
+            my ( $h_mod, $err_str ) = $self->app->ctl->sh->one( 'mod', $h->{mod_id} );
+            $mod_link = UI::Web::Renderer::parse_html(
+                root_dir => $root_dir,
+                tpl_path => $tpl_path,
+                tpl_name => 'mod-link.html',
+                h_vars   => {
+                    page_id => $id,
+                    %{$h_mod}
+                },
+            );
+        }
+        $h->{mod_link} = $mod_link;
+
         $h->{attr} = $attr{$id};
         $h->{dash} = $dash;
 
@@ -159,7 +190,7 @@ sub _build_list {
             h_vars   => $h,
         );
 
-        $result .= _build_list(
+        $result .= $self->_build_list(
             root_dir  => $root_dir,
             tpl_path  => $tpl_path,
             tpl_item  => $tpl_item,
@@ -167,6 +198,34 @@ sub _build_list {
             parent_id => $id,
             level     => $level + 1,
             id_sel    => $id_sel,
+        );
+    }
+
+    return $result;
+}
+
+sub _build_list2 {
+    my (%args) = @_;
+
+    my $root_dir = $args{root_dir} // q{};
+    my $tpl_path = $args{tpl_path} // q{};
+    my $tpl_item = $args{tpl_item} // q{};
+    my $h_table  = $args{a_items}  // {};
+    my $id_sel   = $args{id_sel}   // 0;
+
+    my $result = q{};
+    my %attr   = ( $id_sel => ' selected' );
+
+    foreach my $id ( sort keys %{$h_table} ) {
+        my $h = $h_table->{$id};
+
+        $h->{attr} = $attr{$id};
+
+        $result .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => $tpl_item,
+            h_vars   => $h,
         );
     }
 

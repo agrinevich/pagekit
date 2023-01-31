@@ -7,6 +7,7 @@ use POSIX qw(strftime);
 use Generator::Renderer;
 use Generator::Standard;
 use App::Files;
+use App::Config;
 
 use Moo;
 use namespace::clean;
@@ -370,6 +371,18 @@ sub _lang_links {
     return ( $lang_links, $meta_tags );
 }
 
+sub copy_file {
+    my ( $self, %args ) = @_;
+
+    my $src = $self->app->root_dir . $args{src_path};
+    my $dst = $self->app->root_dir . $args{dst_path};
+
+    return App::Files::copy_file(
+        src => $src,
+        dst => $dst,
+    );
+}
+
 sub make_path {
     my ( $self, %args ) = @_;
 
@@ -532,6 +545,63 @@ sub upload_file {
     chmod $mode_readable, $file_dst;
 
     return;
+}
+
+sub get_mod_config {
+    my ( $self, %args ) = @_;
+
+    my $mod        = $args{mod};
+    my $page_id    = $args{page_id};
+    my $page_path  = $args{page_path};
+    my $fn_replace = $args{fn_replace};
+
+    my $root_dir  = $self->app->root_dir;
+    my $html_path = $self->app->config->{path}->{html};
+
+    my $o_default_config = App::Config::get_config(
+        file => $root_dir . q{/} . $mod . '-default.conf',
+    );
+
+    my $mod_dir = $root_dir . $html_path . $page_path;
+    if ( !-d $mod_dir ) {
+        App::Files::make_path( path => $mod_dir );
+    }
+
+    my $conf_file = $mod_dir . '/' . $mod . '-' . $page_id . '.conf';
+
+    if ( !-e $conf_file ) {
+        # create config with default values
+        if ($fn_replace) {
+            $fn_replace->(
+                o_config => $o_default_config,
+                mod_name => $mod,
+                page_id  => $page_id,
+            );
+        }
+        App::Config::save_config(
+            file   => $conf_file,
+            o_conf => $o_default_config,
+        );
+    }
+    else {
+        # check and add missing params
+        my $o_mode_config = App::Config::get_config(
+            file => $conf_file,
+        );
+        foreach my $param ( keys %{ $o_default_config->{$mod} } ) {
+            if ( !exists $o_mode_config->{$mod}->{$param} ) {
+                $o_mode_config->{$mod}->{$param} = $o_default_config->{$mod}->{$param};
+            }
+        }
+        App::Config::save_config(
+            file   => $conf_file,
+            o_conf => $o_mode_config,
+        );
+    }
+
+    return App::Config::get_config(
+        file => $conf_file,
+    );
 }
 
 1;

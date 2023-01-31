@@ -5,6 +5,7 @@ use Entity::Page;
 use Entity::Pagemark;
 use Entity::Lang;
 use Entity::File;
+use Entity::Note;
 
 use Moo;
 use namespace::clean;

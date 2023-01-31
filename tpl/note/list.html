@@ -1,0 +1,52 @@
+<h1>[% page_name %]: [% qty %]</h1>
+
+<table>
+    <tr>
+        <th>#</th>
+        <th>name</th>
+        <th>price</th>
+        <th>nick</th>
+        <th>add_dt</th>
+        <th>image</th>
+    </tr>
+    <tr>
+        <td colspan="6">[% paging %]</td>
+    </tr>
+    [% list %]
+    <tr>
+        <td colspan="6">[% paging %]</td>
+    </tr>
+</table>
+<br>
+
+<table>
+    <tr style="background-color:lightgreen;">
+        <td>
+            <form name="page-add" action="/admin/note" method="POST">
+                <input type="hidden" name="do" value="add">
+                <input type="hidden" name="page_id" value="[% page_id %]">
+                <input type="hidden" name="page_name" value="[% page_name %]">
+                <input type="text" name="name" size="48" placeholder="Name in primary language">
+                <br>
+                <!-- <textarea placeholder="Description in primary language" name="descr" rows="4" cols="60"></textarea>
+                <br> -->
+                <input type="submit" value="Add">
+            </form>
+        </td>
+        <td>
+
+            <table>
+                <form name="conf-upd" action="/admin/note" method="POST">
+                    <input type="hidden" name="do" value="updconf">
+                    <input type="hidden" name="page_id" value="[% page_id %]">
+                    [% config_html %]
+                    <tr>
+                        <td colspan="2"><input type="submit" value="Update config"></td>
+                    </tr>
+                </form>
+            </table>
+
+        </td>
+    </tr>
+</table>
+<br>

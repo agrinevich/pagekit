@@ -6,6 +6,7 @@ use UI::Web::Page;
 use UI::Web::Pagemark;
 use UI::Web::File;
 use UI::Web::Lang;
+use UI::Web::Note;
 
 use Moo;
 use namespace::clean;

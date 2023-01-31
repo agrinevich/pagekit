@@ -1,0 +1,43 @@
+<h2>Note</h2>
+
+<form name="note-update" action="/admin/note" method="POST">
+    <input type="hidden" name="do" value="upd">
+    <input type="hidden" name="id" value="[% id %]">
+    <input type="hidden" name="page_id" value="[% page_id %]">
+
+    Nick: <input type="text" name="nick" value="[% nick %]" size="24">-[% id %].html
+    <br>
+    Prio: <input type="text" name="prio" value="[% prio %]" size="4">
+    <br>
+    Price: <input type="text" name="price" value="[% price %]" size="14">
+    <br>
+    <input type="submit" value="Update">
+</form>
+
+
+<br clear="all">
+<a href="/admin/note?do=list&fltr_page_id=[% page_id %]">back to list</a>
+
+<h2>Images</h2>
+
+<table>
+    <tr>
+        <td>
+            [% images %]
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <form name="image-upload" action="/admin/note/upimg" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file">
+                <input type="hidden" name="id" value="[% id %]">
+                <input type="hidden" name="page_id" value="[% page_id %]">
+                <input type="submit" value="upload">
+            </form>
+        </td>
+    </tr>
+</table>
+
+<h2>Versions</h2>
+
+[% versions %]
