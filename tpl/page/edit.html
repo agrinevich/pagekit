@@ -3,12 +3,20 @@
 <form name="page-update" action="/admin/page" method="POST">
     <input type="hidden" name="do" value="upd">
     <input type="hidden" name="id" value="[% id %]">
+    Hidden: <input type="text" name="hidden" value="[% hidden %]" size="2">
+    <br>
+    Prio: <input type="text" name="prio" value="[% prio %]" size="4">
+    <br>
     Name: <input type="text" name="name" value="[% name %]" size="32">
     <br>
     Nick: <input type="text" name="nick" value="[% nick %]" size="24">
     <br>
     Parent: <select name="parent_id">
         [% options %]
+    </select>
+    <br>
+    Mod: <select name="mod_id">
+        [% mod_options %]
     </select>
     <br>
     <input type="submit" value="Update">
