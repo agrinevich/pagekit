@@ -13,6 +13,12 @@ use App::Files;
 
 our $VERSION = '0.2';
 
+# const my $ROUND_NUMBER => 0.999999;
+# const my %MSG_TEXT     => (
+#     success => 'Success',
+#     error   => 'Error',
+# );
+
 sub parse_html {
     my (%args) = @_;
 
@@ -72,6 +78,28 @@ sub _gmarks {
 
     return \%result;
 }
+
+# sub build_msg {
+#     my (%args) = @_;
+
+#     my $root_dir = $args{root_dir};
+#     my $tpl_path = $args{tpl_path};
+#     my $tpl_name = $args{tpl_name};
+#     my $msg      = $args{msg};
+
+#     return q{} if !$msg;
+
+#     my $html = parse_html(
+#         root_dir => $root_dir,
+#         tpl_path => $tpl_path,
+#         tpl_name => $tpl_name,
+#         h_vars   => {
+#             text => $MSG_TEXT{$msg},
+#         },
+#     );
+
+#     return $html;
+# }
 
 sub do_escape {
     my ($str) = @_;

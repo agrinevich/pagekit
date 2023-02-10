@@ -403,6 +403,48 @@ sub copy_dir {
     );
 }
 
+sub move_dir {
+    my ( $self, %args ) = @_;
+
+    my $src_dir = $self->app->root_dir . $args{src_path};
+    my $dst_dir = $self->app->root_dir . $args{dst_path};
+
+    return if !-d $src_dir;
+    return if !-d $dst_dir;
+
+    # if ( !-d $dst_dir ) {
+    #     make_path(
+    #         path => $dst_dir,
+    #     );
+    # }
+
+    # my $a_files = get_files(
+    #     dir => $src_dir,
+    # );
+
+    # foreach my $h ( @{$a_files} ) {
+    #     my $src_file = $src_dir . q{/} . $h->{name};
+    #     my $dst_file = $dst_dir . q{/} . $h->{name};
+    #     move_file(
+    #         src => $src_file,
+    #         dst => $dst_file,
+    #     );
+    # }
+
+    App::Files::copy_dir_recursive(
+        src_dir => $src_dir,
+        dst_dir => $dst_dir,
+    );
+
+    # FIXME: files copied but not removed from old place and no errors
+    App::Files::empty_dir_recursive(
+        dir => $src_dir,
+    );
+    rmdir $src_dir;
+
+    return 1;
+}
+
 sub empty_dir {
     my ( $self, %args ) = @_;
 
@@ -547,61 +589,161 @@ sub upload_file {
     return;
 }
 
+sub set_mod_config {
+    my ( $self, %args ) = @_;
+
+    my $mod      = $args{mod};
+    my $page_id  = $args{page_id};
+    my $h_params = $args{h_params};
+
+    my $root_dir  = $self->app->root_dir;
+    my $html_path = $self->app->config->{path}->{html};
+    my $tpl_path  = $self->app->config->{path}->{templates};
+
+    my ( $h_page, $err_str ) = $self->app->ctl->sh->one( 'page', $page_id );
+
+    my $o_config = $self->get_mod_config(
+        mod       => $mod,
+        page_id   => $page_id,
+        page_path => $h_page->{path},
+    );
+
+    my $old_skin = $o_config->{$mod}->{skin};
+
+    # update config values (in memory)
+    foreach my $param ( keys %{ $o_config->{$mod} } ) {
+        $o_config->{$mod}->{$param} = $h_params->{$param};
+    }
+
+    # if skin name changed
+    if ( $old_skin ne $o_config->{$mod}->{skin} ) {
+        my $new_skin_dir = $root_dir . $tpl_path . '/g/' . $o_config->{$mod}->{skin};
+        if ( -d $new_skin_dir ) {
+            # if new skin dir exists already (duplicated)
+            # then fall back to old name
+            $o_config->{$mod}->{skin} = $old_skin;
+        }
+        else {
+            # otherwise move templates to dir with new name
+            $self->move_dir(
+                src_path => $tpl_path . '/g/' . $old_skin,
+                dst_path => $tpl_path . '/g/' . $o_config->{$mod}->{skin},
+            );
+        }
+    }
+
+    # save config values (in file)
+
+    my $mod_dir   = $root_dir . $html_path . $h_page->{path};
+    my $conf_file = $mod_dir . '/' . $mod . '-' . $page_id . '.conf';
+
+    App::Config::save_config(
+        file   => $conf_file,
+        o_conf => $o_config,
+    );
+
+    return;
+}
+
 sub get_mod_config {
     my ( $self, %args ) = @_;
 
-    my $mod        = $args{mod};
-    my $page_id    = $args{page_id};
-    my $page_path  = $args{page_path};
-    my $fn_replace = $args{fn_replace};
+    my $mod       = $args{mod};
+    my $page_id   = $args{page_id};
+    my $page_path = $args{page_path};
 
     my $root_dir  = $self->app->root_dir;
     my $html_path = $self->app->config->{path}->{html};
 
-    my $o_default_config = App::Config::get_config(
-        file => $root_dir . q{/} . $mod . '-default.conf',
-    );
+    my $mod_dir   = $root_dir . $html_path . $page_path;
+    my $conf_file = $mod_dir . '/' . $mod . '-' . $page_id . '.conf';
+
+    my $o_config;
+
+    if ( !-e $conf_file ) {
+        $o_config = $self->_create_mod_config(
+            mod       => $mod,
+            page_id   => $page_id,
+            page_path => $page_path,
+            conf_file => $conf_file,
+        );
+    }
+    else {
+        $o_config = $self->_check_mod_config(
+            mod       => $mod,
+            conf_file => $conf_file,
+        );
+    }
+
+    return $o_config;
+}
+
+sub _create_mod_config {
+    my ( $self, %args ) = @_;
+
+    my $mod       = $args{mod};
+    my $page_id   = $args{page_id};
+    my $page_path = $args{page_path};
+    my $conf_file = $args{conf_file};
+
+    my $root_dir  = $self->app->root_dir;
+    my $html_path = $self->app->config->{path}->{html};
 
     my $mod_dir = $root_dir . $html_path . $page_path;
     if ( !-d $mod_dir ) {
         App::Files::make_path( path => $mod_dir );
     }
 
-    my $conf_file = $mod_dir . '/' . $mod . '-' . $page_id . '.conf';
+    my $o_config = App::Config::get_config(
+        file => $root_dir . q{/} . $mod . '-default.conf',
+    );
 
-    if ( !-e $conf_file ) {
-        # create config with default values
-        if ($fn_replace) {
-            $fn_replace->(
-                o_config => $o_default_config,
-                mod_name => $mod,
-                page_id  => $page_id,
-            );
-        }
-        App::Config::save_config(
-            file   => $conf_file,
-            o_conf => $o_default_config,
-        );
-    }
-    else {
-        # check and add missing params
-        my $o_mode_config = App::Config::get_config(
-            file => $conf_file,
-        );
-        foreach my $param ( keys %{ $o_default_config->{$mod} } ) {
-            if ( !exists $o_mode_config->{$mod}->{$param} ) {
-                $o_mode_config->{$mod}->{$param} = $o_default_config->{$mod}->{$param};
-            }
-        }
-        App::Config::save_config(
-            file   => $conf_file,
-            o_conf => $o_mode_config,
-        );
+    if ( $o_config->{$mod}->{skin} eq 'AUTOREPLACE' ) {
+        $o_config->{$mod}->{skin} = $mod . '-skin-' . $page_id;
     }
 
-    return App::Config::get_config(
+    App::Config::save_config(
+        file   => $conf_file,
+        o_conf => $o_config,
+    );
+
+    return $o_config;
+}
+
+# read config, augment with missing params and return
+sub _check_mod_config {
+    my ( $self, %args ) = @_;
+
+    my $mod       = $args{mod};
+    my $conf_file = $args{conf_file};
+
+    my $root_dir = $self->app->root_dir;
+    # my $html_path = $self->app->config->{path}->{html};
+
+    my $o_default_config = App::Config::get_config(
+        file => $root_dir . q{/} . $mod . '-default.conf',
+    );
+
+    my $o_config = App::Config::get_config(
         file => $conf_file,
     );
+
+    my $is_changed = 0;
+    foreach my $param ( keys %{ $o_default_config->{$mod} } ) {
+        if ( !exists $o_config->{$mod}->{$param} ) {
+            $o_config->{$mod}->{$param} = $o_default_config->{$mod}->{$param};
+            $is_changed = 1;
+        }
+    }
+
+    if ($is_changed) {
+        App::Config::save_config(
+            file   => $conf_file,
+            o_conf => $o_config,
+        );
+    }
+
+    return $o_config;
 }
 
 1;

@@ -90,6 +90,7 @@ sub build_response {
     my $h_result = $adapter_class->new( app => $self->app )->$adapter_method(
         req_params => $o_params,
         data       => $h_entity_response->{data},
+        mod_config => $h_entity_response->{mod_config},
     );
 
     return $h_result;

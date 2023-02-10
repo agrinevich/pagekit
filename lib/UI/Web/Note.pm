@@ -16,42 +16,25 @@ has 'app' => (
     required => 1,
 );
 
-const my $_ENTITY => 'note';
+const my $_ENTITY      => 'note';
+const my $ROUND_NUMBER => 0.999999;
 
 sub list {
     my ( $self, %args ) = @_;
 
-    my $h_table    = $args{data};
-    my $req_params = $args{req_params};
+    my $h_table      = $args{data};
+    my $o_mod_config = $args{mod_config};
+    my $req_params   = $args{req_params};
 
     my $root_dir  = $self->app->root_dir;
     my $tpl_path  = $self->app->config->{path}->{templates};
     my $html_path = $self->app->config->{path}->{html};
     # my $site_domain = $self->app->config->{site}->{domain};
 
-    my $page_id = $req_params->{fltr_page_id} || 1;
+    my $page_id = $req_params->{fltr_page_id} || 0;
+    my $p       = $req_params->{p}            || 0;
 
     my ( $h_page, $err_str ) = $self->app->ctl->sh->one( 'page', $page_id );
-
-    my $o_mod_config = $self->app->ctl->gh->get_mod_config(
-        mod        => $_ENTITY,
-        page_id    => $page_id,
-        page_path  => $h_page->{path},
-        fn_replace => sub {
-            my (%args) = @_;
-
-            my $o_config = $args{o_config};
-            my $mod_name = $args{mod_name};
-            my $page_id  = $args{page_id};
-
-            # auto-replace default skin
-            if ( $o_config->{$mod_name}->{skin} eq 'AUTOREPLACE' ) {
-                $o_config->{$mod_name}->{skin} = $mod_name . '-skin-' . $page_id;
-            }
-
-            return;
-        },
-    );
 
     my $config_html = _build_config_html(
         mod_name  => $_ENTITY,
@@ -70,9 +53,15 @@ sub list {
         # page_path => $h_page->{path},
     );
 
-    #
-    # FIXME: add paging !
-    #
+    my $total_qty = $self->app->ctl->sh->count(
+        $_ENTITY,
+        {
+            page_id => $page_id,
+        },
+    );
+    my $npp    = $o_mod_config->{note}->{npp} || 10;
+    my $offset = $p * $npp;
+
     my $list = $self->_build_list(
         root_dir => $root_dir,
         tpl_path => $skin_tpl_path,
@@ -84,15 +73,26 @@ sub list {
         },
     );
 
+    my $paging = _build_paging(
+        root_dir => $root_dir,
+        tpl_path => $skin_tpl_path,
+        qty      => $total_qty,
+        npp      => $npp,
+        p        => $p,
+        path     => '/admin/note?do=list&fltr_page_id=' . $page_id . '&p=',
+    );
+
     my $html_body = UI::Web::Renderer::parse_html(
         root_dir => $root_dir,
         tpl_path => $skin_tpl_path,
         tpl_name => 'a-list.html',
         h_vars   => {
-            list        => $list,
             page_id     => $page_id,
             page_name   => $h_page->{name},
+            list        => $list,
             config_html => $config_html,
+            paging      => $paging,
+            qty         => $total_qty,
         },
     );
 
@@ -149,6 +149,44 @@ sub _build_list {
             h_vars   => {
                 %{$h},
                 %{$h_vars},
+            },
+        );
+    }
+
+    return $result;
+}
+
+sub _build_paging {
+    my (%args) = @_;
+
+    my $root_dir = $args{root_dir};
+    my $tpl_path = $args{tpl_path};
+    my $qty      = $args{qty};
+    my $npp      = $args{npp};
+    my $p_cur    = $args{p};
+    my $path     = $args{path};
+
+    my $result   = q{};
+    my $tpl_name = q{};
+    my $suffix   = q{};
+
+    my $p_qty  = int( $qty / $npp + $ROUND_NUMBER );
+    my $p_last = $p_qty - 1;
+    foreach my $p ( 0 .. $p_last ) {
+        if   ( $p == $p_cur ) { $tpl_name = 'a-paging-item-cur.html'; }
+        else                  { $tpl_name = 'a-paging-item.html'; }
+
+        $suffix = $p ? $p : q{};
+
+        $result .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => $tpl_name,
+            h_vars   => {
+                p      => $p,
+                num    => ( $p + 1 ),
+                path   => $path,
+                suffix => $suffix,
             },
         );
     }
@@ -249,16 +287,6 @@ sub one {
     return {
         body => $res,
     };
-}
-
-sub get_config {
-    my ( $self, %args ) = @_;
-
-    $args{mod} = 'note';
-
-    my ( $o_config, $err_str ) = $self->app->ctl->gh->get_mod_config(%args);
-
-    return $o_config;
 }
 
 1;
