@@ -409,40 +409,10 @@ sub move_dir {
     my $src_dir = $self->app->root_dir . $args{src_path};
     my $dst_dir = $self->app->root_dir . $args{dst_path};
 
-    return if !-d $src_dir;
-    return if !-d $dst_dir;
-
-    # if ( !-d $dst_dir ) {
-    #     make_path(
-    #         path => $dst_dir,
-    #     );
-    # }
-
-    # my $a_files = get_files(
-    #     dir => $src_dir,
-    # );
-
-    # foreach my $h ( @{$a_files} ) {
-    #     my $src_file = $src_dir . q{/} . $h->{name};
-    #     my $dst_file = $dst_dir . q{/} . $h->{name};
-    #     move_file(
-    #         src => $src_file,
-    #         dst => $dst_file,
-    #     );
-    # }
-
-    App::Files::copy_dir_recursive(
+    return App::Files::move_dir(
         src_dir => $src_dir,
         dst_dir => $dst_dir,
     );
-
-    # FIXME: files copied but not removed from old place and no errors
-    App::Files::empty_dir_recursive(
-        dir => $src_dir,
-    );
-    rmdir $src_dir;
-
-    return 1;
 }
 
 sub empty_dir {
@@ -600,7 +570,7 @@ sub set_mod_config {
     my $html_path = $self->app->config->{path}->{html};
     my $tpl_path  = $self->app->config->{path}->{templates};
 
-    my ( $h_page, $err_str ) = $self->app->ctl->sh->one( 'page', $page_id );
+    my ( $h_page, $err_str1 ) = $self->app->ctl->sh->one( 'page', $page_id );
 
     my $o_config = $self->get_mod_config(
         mod       => $mod,
@@ -616,16 +586,18 @@ sub set_mod_config {
     }
 
     # if skin name changed
+    my $err_str2;
     if ( $old_skin ne $o_config->{$mod}->{skin} ) {
         my $new_skin_dir = $root_dir . $tpl_path . '/g/' . $o_config->{$mod}->{skin};
         if ( -d $new_skin_dir ) {
             # if new skin dir exists already (duplicated)
             # then fall back to old name
             $o_config->{$mod}->{skin} = $old_skin;
+            $err_str2 = "skin name duplicated - fall back to previous value";
         }
         else {
             # otherwise move templates to dir with new name
-            $self->move_dir(
+            $err_str2 = $self->move_dir(
                 src_path => $tpl_path . '/g/' . $old_skin,
                 dst_path => $tpl_path . '/g/' . $o_config->{$mod}->{skin},
             );
@@ -642,7 +614,7 @@ sub set_mod_config {
         o_conf => $o_config,
     );
 
-    return;
+    return $err_str2;
 }
 
 sub get_mod_config {

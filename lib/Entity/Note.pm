@@ -296,11 +296,16 @@ sub updconf {
         };
     }
 
-    $self->ctl->gh->set_mod_config(
+    my $err_str = $self->ctl->gh->set_mod_config(
         mod      => 'note',
         page_id  => $self->page_id,
         h_params => $h_params,
     );
+    if ($err_str) {
+        return {
+            err => $err_str,
+        };
+    }
 
     my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . '/admin/note?do=list';

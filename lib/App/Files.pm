@@ -105,20 +105,11 @@ sub move_dir {
     my $src_dir = $args{src_dir};
     my $dst_dir = $args{dst_dir};
 
-    return if !-d $src_dir;
+    return $src_dir . ' doesnt exist' if !-d $src_dir;
 
-    copy_dir_recursive(
-        src_dir => $src_dir,
-        dst_dir => $dst_dir,
-    );
+    my $success = File::Copy::Recursive::dirmove( $src_dir, $dst_dir );
 
-    empty_dir_recursive(
-        dir => $src_dir,
-    );
-
-    rmdir $src_dir;
-
-    return 1;
+    return $success ? undef : 'error: ' . $!;
 }
 
 sub copy_dir_recursive {
