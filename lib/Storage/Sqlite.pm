@@ -40,19 +40,41 @@ has 'dbh' => (
 our $VERSION = '0.2';
 
 sub list {
-    my ( $self, $entity, $h_filters ) = @_;
+    my ( $self, $entity, $h_where, $a_order, $h_limit ) = @_;
 
     my $sel = qq{SELECT * FROM $entity};
 
-    my @fields = keys %{$h_filters};
-    if ( scalar @fields ) {
+    # WHERE page_id =2 AND type = 'note'
+    my @wheres = keys %{ $h_where // {} };
+    if ( scalar @wheres ) {
         my @pairs;
-        foreach my $k (@fields) {
-            my $v = $self->dbh->quote( $h_filters->{$k} );
+        foreach my $k (@wheres) {
+            my $v = $self->dbh->quote( $h_where->{$k} );
             push @pairs, "$k = $v";
         }
         my $pairs = join ' AND ', @pairs;
         $sel .= " WHERE $pairs";
+    }
+
+    # ORDER BY time DESC, name ASC
+    {
+        my @pairs;
+        foreach my $h ( @{ $a_order // [] } ) {
+            my $ord_str = $h->{orderby} . q{ } . $h->{orderhow};
+            push @pairs, $ord_str;
+        }
+        if ( scalar @pairs ) {
+            my $pairs = join ', ', @pairs;
+            $sel .= ' ORDER BY ' . $pairs;
+        }
+    }
+
+    # LIMIT qty OFFSET offset;
+    if ( exists $h_limit->{qty} ) {
+        $sel .= ' LIMIT ' . $h_limit->{qty};
+        if ( exists $h_limit->{offset} ) {
+            $sel .= ' OFFSET ' . $h_limit->{offset};
+        }
     }
 
     my $h_rows = $self->dbh->selectall_hashref( $sel, 'id' );
@@ -60,13 +82,37 @@ sub list {
     return ( $h_rows, undef );
 }
 
+sub count {
+    my ( $self, $entity, $h_where ) = @_;
+
+    my $sel = qq{SELECT COUNT(*) FROM $entity};
+
+    # WHERE page_id =2 AND type = 'note'
+    my @wheres = keys %{ $h_where // {} };
+    if ( scalar @wheres ) {
+        my @pairs;
+        foreach my $k (@wheres) {
+            my $v = $self->dbh->quote( $h_where->{$k} );
+            push @pairs, "$k = $v";
+        }
+        my $pairs = join ' AND ', @pairs;
+        $sel .= " WHERE $pairs";
+    }
+
+    my ($count) = $self->dbh->selectrow_array($sel);
+
+    return $count;
+}
+
 sub one {
     my ( $self, $entity, $id ) = @_;
+
+    my $err;
 
     my $sel   = qq{SELECT * FROM $entity WHERE id = $id};
     my $h_row = $self->dbh->selectrow_hashref($sel);
 
-    return ( $h_row, undef );
+    return ( $h_row, $err );
 }
 
 sub add {
@@ -118,15 +164,15 @@ sub upd {
 }
 
 sub del {
-    my ( $self, $entity, $h_filters ) = @_;
+    my ( $self, $entity, $h_where ) = @_;
 
     my $del = qq{DELETE FROM $entity};
 
-    my @fields = keys %{$h_filters};
+    my @fields = keys %{$h_where};
     if ( scalar @fields ) {
         my @pairs;
         foreach my $k (@fields) {
-            my $v = $self->dbh->quote( $h_filters->{$k} );
+            my $v = $self->dbh->quote( $h_where->{$k} );
             push @pairs, "$k = $v";
         }
         my $pairs = join ' AND ', @pairs;
@@ -135,7 +181,7 @@ sub del {
 
     my $rv = $self->dbh->do($del) or croak $self->dbh->errstr;
 
-    return;
+    return $rv;
 }
 
 sub backup_create {
