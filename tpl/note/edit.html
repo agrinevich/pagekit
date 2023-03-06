@@ -28,8 +28,9 @@
     </tr>
     <tr>
         <td>
-            <form name="image-upload" action="/admin/note/upimg" method="POST" enctype="multipart/form-data">
+            <form name="image-upload" action="/admin/file" method="POST" enctype="multipart/form-data">
                 <input type="file" name="file">
+                <input type="hidden" name="do" value="niupload">
                 <input type="hidden" name="id" value="[% id %]">
                 <input type="hidden" name="page_id" value="[% page_id %]">
                 <input type="submit" value="upload">

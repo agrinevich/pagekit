@@ -29,28 +29,26 @@ sub list {
     my $root_dir  = $self->app->root_dir;
     my $tpl_path  = $self->app->config->{path}->{templates};
     my $html_path = $self->app->config->{path}->{html};
-    # my $site_domain = $self->app->config->{site}->{domain};
 
     my $page_id = $req_params->{fltr_page_id} || 0;
     my $p       = $req_params->{p}            || 0;
 
     my ( $h_page, $err_str ) = $self->app->ctl->sh->one( 'page', $page_id );
 
+    my $skin_tpl_path = $self->_sync_templates(
+        mod      => $_ENTITY,
+        skin     => $o_mod_config->{$_ENTITY}->{skin},
+        root_dir => $root_dir,
+        tpl_path => $tpl_path,
+    );
+
+    # FIXME: tpl_path for SKIN !
     my $config_html = _build_config_html(
         mod_name  => $_ENTITY,
         root_dir  => $root_dir,
         tpl_path  => $tpl_path . q{/} . $_ENTITY,
         html_path => $html_path,
         o_config  => $o_mod_config,
-    );
-
-    my $skin_tpl_path = $self->_sync_templates(
-        mod      => $_ENTITY,
-        skin     => $o_mod_config->{$_ENTITY}->{skin},
-        root_dir => $root_dir,
-        tpl_path => $tpl_path,
-        # page_id  => $page_id,
-        # page_path => $h_page->{path},
     );
 
     my $total_qty = $self->app->ctl->sh->count(
@@ -256,21 +254,45 @@ sub _sync_templates {
 sub one {
     my ( $self, %args ) = @_;
 
-    my $h_note = $args{data};
-    # my $req_params = $args{req_params};
+    my $h_note       = $args{data};
+    my $o_mod_config = $args{mod_config};
+    my $req_params   = $args{req_params};
 
-    my $root_dir = $self->app->root_dir;
-    my $tpl_path = $self->app->config->{path}->{templates};
+    my $root_dir  = $self->app->root_dir;
+    my $tpl_path  = $self->app->config->{path}->{templates};
+    my $html_path = $self->app->config->{path}->{html};
 
-    # my ( $h_table, $err_str ) = $self->app->ctl->sh->list('page');
+    my $page_id = $req_params->{page_id} || 0;
+
+    my ( $h_page, $err_str ) = $self->app->ctl->sh->one( 'page', $page_id );
+
+    my $skin_tpl_path = $self->_sync_templates(
+        mod      => $_ENTITY,
+        skin     => $o_mod_config->{$_ENTITY}->{skin},
+        root_dir => $root_dir,
+        tpl_path => $tpl_path,
+    );
+
+    my $h_images = $h_note->{images};
+    my $images   = q{};
+    foreach my $id ( sort keys %{$h_images} ) {
+        my $h = $h_images->{$id};
+
+        $images .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $skin_tpl_path,
+            tpl_name => 'a-img-item.html',
+            h_vars   => $h,
+        );
+    }
 
     my $html_body = UI::Web::Renderer::parse_html(
         root_dir => $root_dir,
-        tpl_path => $tpl_path . q{/} . $_ENTITY,
-        tpl_name => 'edit.html',
+        tpl_path => $skin_tpl_path,
+        tpl_name => 'a-edit.html',
         h_vars   => {
             %{$h_note},
-            # images   => $images,
+            images => $images,
             # versions => $versions,
         },
     );

@@ -4,8 +4,9 @@ host   = http://site.com
 
 [path]
 templates = /tpl
-html      = /html
 bkp       = /bkp
+html      = /html
+img       = /img
 
 [admin]
 user    = admin

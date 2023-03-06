@@ -40,9 +40,9 @@ has 'dbh' => (
 our $VERSION = '0.2';
 
 sub list {
-    my ( $self, $entity, $h_where, $a_order, $h_limit ) = @_;
+    my ( $self, $table, $h_where, $a_order, $h_limit ) = @_;
 
-    my $sel = qq{SELECT * FROM $entity};
+    my $sel = qq{SELECT * FROM $table};
 
     # WHERE page_id =2 AND type = 'note'
     my @wheres = keys %{ $h_where // {} };
@@ -83,9 +83,9 @@ sub list {
 }
 
 sub count {
-    my ( $self, $entity, $h_where ) = @_;
+    my ( $self, $table, $h_where ) = @_;
 
-    my $sel = qq{SELECT COUNT(*) FROM $entity};
+    my $sel = qq{SELECT COUNT(*) FROM $table};
 
     # WHERE page_id =2 AND type = 'note'
     my @wheres = keys %{ $h_where // {} };
@@ -105,18 +105,18 @@ sub count {
 }
 
 sub one {
-    my ( $self, $entity, $id ) = @_;
+    my ( $self, $table, $id ) = @_;
 
     my $err;
 
-    my $sel   = qq{SELECT * FROM $entity WHERE id = $id};
+    my $sel   = qq{SELECT * FROM $table WHERE id = $id};
     my $h_row = $self->dbh->selectrow_hashref($sel);
 
     return ( $h_row, $err );
 }
 
 sub add {
-    my ( $self, $entity, $h_data ) = @_;
+    my ( $self, $table, $h_data ) = @_;
 
     # keys must be exactly the same as table field names
     my @fields = keys %{$h_data};
@@ -130,7 +130,7 @@ sub add {
     }
     my $placeholders = join q{,}, @placeholders;
 
-    my $ins = qq{INSERT INTO $entity ($fields) VALUES ($placeholders)};
+    my $ins = qq{INSERT INTO $table ($fields) VALUES ($placeholders)};
     my $sth = $self->dbh->prepare($ins) or croak $self->dbh->errstr;
     my $rv  = $sth->execute(@values) or croak $self->dbh->errstr;
     my $id  = $self->dbh->last_insert_id();
@@ -139,7 +139,7 @@ sub add {
 }
 
 sub upd {
-    my ( $self, $entity, $h_data ) = @_;
+    my ( $self, $table, $h_data ) = @_;
 
     my %data = %{$h_data};
 
@@ -156,17 +156,17 @@ sub upd {
     }
     my $pairs = join q{,}, @pairs;
 
-    my $upd = qq{UPDATE $entity SET $pairs WHERE id = $id};
+    my $upd = qq{UPDATE $table SET $pairs WHERE id = $id};
     my $sth = $self->dbh->prepare($upd) or croak $self->dbh->errstr;
     my $rv  = $sth->execute(@values) or croak $self->dbh->errstr;
 
-    return;
+    return $rv;
 }
 
 sub del {
-    my ( $self, $entity, $h_where ) = @_;
+    my ( $self, $table, $h_where ) = @_;
 
-    my $del = qq{DELETE FROM $entity};
+    my $del = qq{DELETE FROM $table};
 
     my @fields = keys %{$h_where};
     if ( scalar @fields ) {
