@@ -529,9 +529,80 @@ sub extract_bkp {
     );
 }
 
-#
-# TODO: rename to upload_pagefile
-#
+sub upload_img {
+    my ( $self, %args ) = @_;
+
+    my $entity_name = $args{entity_name};
+    my $entity_id   = $args{entity_id};
+    my $img_id      = $args{img_id};
+    my $uploads     = $args{uploads};
+    my $maxh_la     = $args{maxh_la};
+    my $maxw_la     = $args{maxw_la};
+    my $maxh_sm     = $args{maxh_sm};
+    my $maxw_sm     = $args{maxw_sm};
+
+    my $app         = $self->app;
+    my $html_path   = $app->config->{path}->{html};
+    my $images_path = $app->config->{path}->{img};
+
+    my $web_path     = $images_path . q{/} . $entity_name;
+    my $disk_path    = $html_path . $web_path;
+    my $disk_path_la = $disk_path . '/la';
+    my $disk_path_sm = $disk_path . '/sm';
+
+    if ( !-d $app->root_dir . $disk_path_la ) {
+        $self->make_path( path => $disk_path_la );
+    }
+    if ( !-d $app->root_dir . $disk_path_sm ) {
+        $self->make_path( path => $disk_path_sm );
+    }
+
+    my $o_file    = $uploads->{file};
+    my $file_src  = $o_file->path();
+    my $base_name = $o_file->basename();
+    # my @files  = $o_uploads->get_all('file');
+    my @chunks = split /[.]/, $base_name;
+    my $ext    = pop @chunks;
+
+    my $img_name     = $entity_id . q{-} . $img_id . q{.} . $ext;
+    my $file_orig    = $app->root_dir . $disk_path . q{/} . $img_name;
+    my $file_path_la = $disk_path_la . '/' . $img_name;
+    my $file_path_sm = $disk_path_sm . '/' . $img_name;
+    my $file_la      = $app->root_dir . $file_path_la;
+    my $file_sm      = $app->root_dir . $file_path_sm;
+
+    rename $file_src, $file_orig;
+
+    # scale to la
+    my $success = App::Files::scale_image(
+        file_src => $file_orig,
+        file_dst => $file_la,
+        width    => $maxw_la,
+        height   => $maxh_la,
+    );
+    if ( !$success ) {
+        carp( 'Failed to scale to large image: ' . $file_orig );
+    }
+
+    # scale to sm
+    my $success2 = App::Files::scale_image(
+        file_src => $file_orig,
+        file_dst => $file_sm,
+        width    => $maxw_sm,
+        height   => $maxh_sm,
+    );
+    if ( !$success2 ) {
+        carp( 'Failed to scale to small image: ' . $file_orig );
+    }
+
+    unlink $file_orig;
+
+    return {
+        path_la => $web_path . '/la/' . $img_name,
+        path_sm => $web_path . '/sm/' . $img_name,
+    };
+}
+
 sub upload_file {
     my ( $self, %args ) = @_;
 

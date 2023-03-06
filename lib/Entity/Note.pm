@@ -115,13 +115,28 @@ sub list {
 }
 
 sub one {
-    my ($self) = @_;
+    my ( $self, $h_params ) = @_;
 
     if ( !$self->id ) {
         return {
             err => 'id is required',
         };
     }
+
+    my $page_id = $h_params->{page_id} || 0;
+
+    my ( $h_page, $err_str1 ) = $self->ctl->sh->one( 'page', $page_id );
+    if ($err_str1) {
+        return {
+            err => $err_str1,
+        };
+    }
+
+    my $o_mod_config = $self->ctl->gh->get_mod_config(
+        mod       => 'note',
+        page_id   => $page_id,
+        page_path => $h_page->{path},
+    );
 
     my ( $h_data, $err_str ) = $self->ctl->sh->one( 'note', $self->id );
     if ($err_str) {
@@ -130,11 +145,26 @@ sub one {
         };
     }
 
-    $h_data->{ctl} = $self->ctl;
+    my ( $h_images, $err_str2 ) = $self->ctl->sh->list(
+        'note_image',
+        {
+            note_id => $self->id,
+        },
+        [
+            {
+                orderby  => 'id',
+                orderhow => 'ASC',
+            },
+        ],
+    );
+
+    $h_data->{images} = $h_images;
+    # $h_data->{ctl}    = $self->ctl; # ??? why
 
     return {
-        action => 'one',
-        data   => $h_data,
+        action     => 'one',
+        data       => $h_data,
+        mod_config => $o_mod_config,
     };
 }
 
@@ -272,11 +302,12 @@ sub del {
     }
 
     my $rv1 = $self->ctl->sh->del( 'note_version', { note_id => $self->id } );
-    my $rv2 = $self->ctl->sh->del( 'note_image',   { note_id => $self->id } );
-    # TODO: delete image files
 
+    # FIXME: delete image files
+    my $rv2 = $self->ctl->sh->del( 'note_image', { note_id => $self->id } );
+
+    # FIXME: delete note page file
     my $rv = $self->ctl->sh->del( 'note', { id => $self->id } );
-    # TODO: delete note page file
 
     my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . '/admin/note?do=list';

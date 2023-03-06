@@ -321,7 +321,118 @@ sub bkprestore {
     };
 }
 
-sub upload {
+# note image delete
+sub nidelete {
+    my ( $self, $params ) = @_;
+
+    if ( !$params->{note_id} ) {
+        return {
+            err => 'note_id is required',
+        };
+    }
+
+    if ( !$params->{id} ) {
+        return {
+            err => 'id is required',
+        };
+    }
+
+    my ( $h_note,  $err_str1 ) = $self->ctl->sh->one( 'note',       $params->{note_id} );
+    my ( $h_image, $err_str2 ) = $self->ctl->sh->one( 'note_image', $params->{id} );
+
+    my $app       = $self->ctl->gh->app;
+    my $root_dir  = $app->root_dir;
+    my $html_path = $app->config->{path}->{html};
+
+    # delete from disk
+    my $file_la = $root_dir . $html_path . $h_image->{path_la};
+    my $file_sm = $root_dir . $html_path . $h_image->{path_sm};
+    unlink($file_la);
+    unlink($file_sm);
+
+    # delete from storage
+    my $rv = $self->ctl->sh->del( 'note_image', { id => $params->{id} } );
+
+    my $url = $app->config->{site}->{host} . '/admin/note?do=one';
+    $url .= '&id=' . $params->{note_id};
+    $url .= '&page_id=' . $h_note->{page_id};
+
+    return {
+        url => $url,
+    };
+}
+
+# note image upload
+sub niupload {
+    my ( $self, $params, $uploads ) = @_;
+
+    if ( !$params->{page_id} ) {
+        return {
+            err => 'page_id is required',
+        };
+    }
+
+    if ( !$params->{id} ) {
+        return {
+            err => 'id is required',
+        };
+    }
+
+    # insert to storage, get ID
+    my ( $img_id, $err_str ) = $self->ctl->sh->add(
+        'note_image',
+        {
+            note_id => $params->{id},
+        },
+    );
+
+    # we need to know width and height limits from mod config to scale image
+    my ( $h_page, $err_str1 ) = $self->ctl->sh->one( 'page', $params->{page_id} );
+    if ($err_str1) {
+        return {
+            err => $err_str1,
+        };
+    }
+    my $o_mod_config = $self->ctl->gh->get_mod_config(
+        mod       => 'note',
+        page_id   => $params->{page_id},
+        page_path => $h_page->{path},
+    );
+
+    # process/scale file
+    my $h_result = $self->ctl->gh->upload_img(
+        entity_name => 'note',
+        entity_id   => $params->{id},
+        img_id      => $img_id,
+        uploads     => $uploads,
+        maxh_la     => $o_mod_config->{note}->{img_maxh_la},
+        maxw_la     => $o_mod_config->{note}->{img_maxw_la},
+        maxh_sm     => $o_mod_config->{note}->{img_maxh_sm},
+        maxw_sm     => $o_mod_config->{note}->{img_maxw_sm},
+    );
+
+    # update img path in storage
+    $self->ctl->sh->upd(
+        'note_image',
+        {
+            id      => $img_id,
+            path_la => $h_result->{path_la},
+            path_sm => $h_result->{path_sm},
+        },
+    );
+
+    my $app = $self->ctl->uih->app;
+    my $url = $app->config->{site}->{host} . '/admin/note?do=one';
+    $url .= '&id=' . $params->{id};
+    $url .= '&page_id=' . $params->{page_id};
+
+    return {
+        url => $url,
+    };
+}
+
+# page file upload
+sub pfupload {
     my ( $self, $params, $uploads ) = @_;
 
     if ( !$params->{page_id} ) {
@@ -360,7 +471,7 @@ sub upload {
     };
 }
 
-sub remove {
+sub pfremove {
     my ( $self, $params ) = @_;
 
     if ( !$params->{page_id} ) {

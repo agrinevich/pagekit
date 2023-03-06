@@ -6,6 +6,8 @@ use warnings;
 use English qw( -no_match_vars );
 use Carp qw(croak carp);
 use Path::Tiny;
+use Try::Tiny;
+use Imager;
 use Number::Bytes::Human qw(format_bytes);
 use File::Copy::Recursive qw(dircopy pathempty);
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
@@ -185,6 +187,41 @@ sub extract_zip {
     my $es = $zip->extractTree( undef, $real_dir );
 
     return $es == AZ_OK ? q{} : 'Failed to extract';
+}
+
+sub scale_image {
+    my (%args) = @_;
+
+    my $file_src = $args{file_src};
+    my $file_dst = $args{file_dst};
+    my $width    = $args{width};
+    my $height   = $args{height};
+
+    my $is_ok = try {
+        my $o_image_src = Imager->new() or croak 'Failed to read: ' . Imager->errstr();
+
+        $o_image_src->read(
+            file => $file_src,
+        ) or croak 'Failed to read: ' . $o_image_src->errstr;
+
+        my $o_image_dst = $o_image_src->scale(
+            xpixels => $width,
+            ypixels => $height,
+            type    => 'min',
+        );
+
+        $o_image_dst->write(
+            file => $file_dst,
+        ) or croak 'Failed to save: ', $o_image_dst->errstr;
+
+        return 1;
+    }
+    catch {
+        carp("Failed to scale_image: $_");
+        return;
+    };
+
+    return $is_ok;
 }
 
 1;

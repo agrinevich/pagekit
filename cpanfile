@@ -1,11 +1,16 @@
+requires 'Archive::Zip';
 requires 'Config::Tiny';
 requires 'Const::Fast';
 requires 'Daemon::Control';
 requires 'DBD::SQLite';
 requires 'DBI';
+requires 'File::Copy::Recursive';
+requires 'Imager';
 requires 'Moo';
+requires 'Number::Bytes::Human';
 requires 'Path::Tiny';
 requires 'Plack';
 requires 'Starman';
 requires 'Test::Compile';
 requires 'Text::Xslate';
+requires 'Try::Tiny';
