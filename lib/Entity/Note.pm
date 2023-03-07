@@ -303,13 +303,25 @@ sub del {
 
     my $rv1 = $self->ctl->sh->del( 'note_version', { note_id => $self->id } );
 
-    # FIXME: delete image files
+    my $app       = $self->ctl->gh->app;
+    my $html_path = $app->config->{path}->{html};
+
+    my ( $h_images, $err_str2 ) = $self->ctl->sh->list(
+        'note_image',
+        { note_id => $self->id },
+    );
+    foreach my $id ( keys %{$h_images} ) {
+        my $path_sm = $h_images->{$id}->{path_sm};
+        my $path_la = $h_images->{$id}->{path_la};
+
+        $self->ctl->gh->delete_file( file_path => $html_path . $path_la );
+        $self->ctl->gh->delete_file( file_path => $html_path . $path_sm );
+    }
     my $rv2 = $self->ctl->sh->del( 'note_image', { note_id => $self->id } );
 
     # FIXME: delete note page file
     my $rv = $self->ctl->sh->del( 'note', { id => $self->id } );
 
-    my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . '/admin/note?do=list';
     $url .= '&fltr_page_id=' . $h_data->{page_id};
 
