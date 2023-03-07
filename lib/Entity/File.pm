@@ -341,14 +341,11 @@ sub nidelete {
     my ( $h_image, $err_str2 ) = $self->ctl->sh->one( 'note_image', $params->{id} );
 
     my $app       = $self->ctl->gh->app;
-    my $root_dir  = $app->root_dir;
     my $html_path = $app->config->{path}->{html};
 
     # delete from disk
-    my $file_la = $root_dir . $html_path . $h_image->{path_la};
-    my $file_sm = $root_dir . $html_path . $h_image->{path_sm};
-    unlink($file_la);
-    unlink($file_sm);
+    $self->ctl->gh->delete_file( file_path => $html_path . $h_image->{path_la} );
+    $self->ctl->gh->delete_file( file_path => $html_path . $h_image->{path_sm} );
 
     # delete from storage
     my $rv = $self->ctl->sh->del( 'note_image', { id => $params->{id} } );
