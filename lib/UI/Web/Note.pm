@@ -42,11 +42,10 @@ sub list {
         tpl_path => $tpl_path,
     );
 
-    # FIXME: tpl_path for SKIN !
     my $config_html = _build_config_html(
         mod_name  => $_ENTITY,
         root_dir  => $root_dir,
-        tpl_path  => $tpl_path . q{/} . $_ENTITY,
+        tpl_path  => $skin_tpl_path,
         html_path => $html_path,
         o_config  => $o_mod_config,
     );
@@ -207,7 +206,7 @@ sub _build_config_html {
         $result .= UI::Web::Renderer::parse_html(
             root_dir => $root_dir,
             tpl_path => $tpl_path,
-            tpl_name => 'config-item.html',
+            tpl_name => 'a-config-item.html',
             h_vars   => {
                 name  => $param_name,
                 value => $o_config->{$mod_name}->{$param_name},
