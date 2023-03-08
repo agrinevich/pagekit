@@ -157,10 +157,10 @@ sub upd {
     my $pairs = join q{,}, @pairs;
 
     my $upd = qq{UPDATE $table SET $pairs WHERE id = $id};
-    my $sth = $self->dbh->prepare($upd) or croak $self->dbh->errstr;
-    my $rv  = $sth->execute(@values) or croak $self->dbh->errstr;
+    my $sth = $self->dbh->prepare($upd) or return $self->dbh->errstr;
+    my $rv  = $sth->execute(@values) or return $self->dbh->errstr;
 
-    return $rv;
+    return;
 }
 
 sub del {

@@ -271,6 +271,7 @@ sub _go_del {
         },
     );
     foreach my $child_id ( keys %{$h_table} ) {
+        # FIXME: check if children actually deleted
         $self->_go_del( { parent_id => $child_id } );
     }
 
@@ -280,11 +281,11 @@ sub _go_del {
     }
 
     #
-    # TODO: del files
+    # FIXME: del files
     #
 
     #
-    # TODO: del notes if any
+    # FIXME: del notes if any
     #
 
     my $err_str = $self->ctl->sh->del( 'page', { id => $self->id } );
@@ -293,7 +294,7 @@ sub _go_del {
     }
 
     #
-    # TODO: del page dir
+    # FIXME: del page dir
     #
 
     return;
