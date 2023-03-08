@@ -29,6 +29,7 @@ sub gen_pages {
 
     my ( $h_langs, $err_str )  = $self->app->ctl->sh->list('lang');
     my ( $h_pages, $err_str2 ) = $self->app->ctl->sh->list('page');
+    my ( $h_mods,  $err_str3 ) = $self->app->ctl->sh->list('mod');
 
     my $cur_date = strftime( '%Y-%m-%d', localtime );
     my $a_map    = [];
@@ -49,6 +50,7 @@ sub gen_pages {
             level     => 0,
             items     => $h_pages,
             langs     => $h_langs,
+            mods      => $h_mods,
             a_map     => $a_map,
             cur_date  => $cur_date,
         );
@@ -84,6 +86,7 @@ sub go_tree {
     my $level     = $args{level}     // 0;
     my $h_pages   = $args{items}     // {};
     my $h_langs   = $args{langs}     // {};
+    my $h_mods    = $args{mods}      // {};
     my $a_map     = $args{a_map}     // [];
     my $cur_date  = $args{cur_date}  // q{};
 
@@ -131,27 +134,28 @@ sub go_tree {
         );
         push @{$a_map}, $map_item;
 
-        {
-            # TODO: add another page types (plugins)
-            my $page_type = 'Standard';
-            my $gen_class = 'Generator::' . $page_type;
-
-            $gen_class->gen(
-                sh            => $self->app->ctl->sh,
-                site_host     => $site_host,
-                root_dir      => $root_dir,
-                tpl_path      => $tpl_path,
-                html_path     => $html_path,
-                lang_path     => $lang_path,
-                lang_id       => $lang_id,
-                page_path     => $h->{path},
-                page_id       => $id,
-                lang_links    => $lang_links,
-                lang_metatags => $meta_tags,
-                'd_navi'      => $d_navi,
-                'm_navi'      => $m_navi,
-            );
+        my $mod_id    = $h->{mod_id};
+        my $page_type = 'Standard';
+        if ( $mod_id > 0 && exists $h_mods->{$mod_id} ) {
+            $page_type = ucfirst $h_mods->{$mod_id}->{name};
         }
+        my $gen_class = 'Generator::' . $page_type;
+
+        $gen_class->gen(
+            sh            => $self->app->ctl->sh,
+            site_host     => $site_host,
+            root_dir      => $root_dir,
+            tpl_path      => $tpl_path,
+            html_path     => $html_path,
+            lang_path     => $lang_path,
+            lang_id       => $lang_id,
+            page_path     => $h->{path},
+            page_id       => $id,
+            lang_links    => $lang_links,
+            lang_metatags => $meta_tags,
+            'd_navi'      => $d_navi,
+            'm_navi'      => $m_navi,
+        );
 
         $self->go_tree(
             site_host => $site_host,
@@ -164,6 +168,7 @@ sub go_tree {
             level     => $level + 1,
             items     => $h_pages,
             langs     => $h_langs,
+            mods      => $h_mods,
             a_map     => $a_map,
             cur_date  => $cur_date,
         );
