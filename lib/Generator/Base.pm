@@ -6,6 +6,7 @@ use POSIX qw(strftime);
 
 use Generator::Renderer;
 use Generator::Standard;
+use Generator::Note;
 use App::Files;
 use App::Config;
 
@@ -143,6 +144,7 @@ sub go_tree {
 
         $gen_class->gen(
             sh            => $self->app->ctl->sh,
+            gh            => $self->app->ctl->gh,
             site_host     => $site_host,
             root_dir      => $root_dir,
             tpl_path      => $tpl_path,
@@ -290,8 +292,8 @@ sub _child_links {
             },
         );
         my @mark_ids  = keys %{$h_marks};
-        my $mark_id   = $mark_ids[0];
-        my $page_name = $h_marks->{$mark_id}->{value};
+        my $mark_id   = $mark_ids[0] // 0;
+        my $page_name = $h_marks->{$mark_id}->{value} // q{};
 
         my $page_path = $h->{path};
 
