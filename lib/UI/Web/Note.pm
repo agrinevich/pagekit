@@ -56,8 +56,7 @@ sub list {
             page_id => $page_id,
         },
     );
-    my $npp    = $o_mod_config->{note}->{npp} || 10;
-    my $offset = $p * $npp;
+    my $npp = $o_mod_config->{note}->{npp};
 
     my $list = $self->_build_list(
         root_dir => $root_dir,
@@ -242,6 +241,22 @@ sub _sync_templates {
         if ( !-e ( $root_dir . $dst_path ) ) {
             $self->app->ctl->gh->copy_file(
                 src_path => $tpl_path . q{/} . $mod . q{/} . $h_tpl->{name},
+                dst_path => $dst_path,
+            );
+        }
+    }
+
+    # copy missing front-end templates from default dir
+    my $a_front_tpls = $self->app->ctl->gh->get_files(
+        path       => $tpl_path . q{/g/} . $mod,
+        files_only => 1,
+    );
+    foreach my $h_tpl ( @{$a_front_tpls} ) {
+        my $dst_path = $skin_tpl_path . '/f-' . $h_tpl->{name};
+
+        if ( !-e ( $root_dir . $dst_path ) ) {
+            $self->app->ctl->gh->copy_file(
+                src_path => $tpl_path . q{/g/} . $mod . q{/} . $h_tpl->{name},
                 dst_path => $dst_path,
             );
         }
