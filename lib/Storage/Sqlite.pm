@@ -130,9 +130,10 @@ sub add {
     }
     my $placeholders = join q{,}, @placeholders;
 
+    # TODO: try/catch
     my $ins = qq{INSERT INTO $table ($fields) VALUES ($placeholders)};
-    my $sth = $self->dbh->prepare($ins) or croak $self->dbh->errstr;
-    my $rv  = $sth->execute(@values) or croak $self->dbh->errstr;
+    my $sth = $self->dbh->prepare($ins) or return ( undef, $self->dbh->errstr );
+    my $rv  = $sth->execute(@values) or return ( undef, $self->dbh->errstr );
     my $id  = $self->dbh->last_insert_id();
 
     return ( $id, undef );

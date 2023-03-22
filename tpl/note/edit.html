@@ -39,6 +39,31 @@
     </tr>
 </table>
 
+<br clear="all">
+
 <h2>Versions</h2>
 
-[% versions %]
+<table>
+    <tr>
+        <td>
+            [% versions %]
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <form name="note-vers-add" action="/admin/note" method="POST">
+                <input type="hidden" name="do" value="addvers">
+                <input type="hidden" name="id" value="[% id %]">
+                <input type="hidden" name="page_id" value="[% page_id %]">
+                <select name="lang_id">
+                    [% lang_options %]
+                </select>
+                Name: <input type="text" name="name" value="" size="32">
+                <input type="submit" value="Add">
+            </form>
+
+        </td>
+    </tr>
+</table>
+
+<br clear="all">

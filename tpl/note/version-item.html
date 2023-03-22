@@ -1,0 +1,27 @@
+<div style="float: left;">
+
+    <span style="background-color: darkkhaki;">[% lang_isocode %]</span>
+
+    <form name="note-update" action="/admin/note" method="POST">
+        <input type="hidden" name="do" value="updvers">
+        <input type="hidden" name="id" value="[% id %]">
+        <input type="hidden" name="note_id" value="[% note_id %]">
+        <input type="hidden" name="lang_id" value="[% lang_id %]">
+        <input type="hidden" name="page_id" value="[% page_id %]">
+
+        Name: <input type="text" name="name" value="[% name %]" size="48">
+        <br>
+        p_title: <input type="text" name="p_title" value="[% p_title %]" size="48">
+        <br>
+        p_descr: <input type="text" name="p_descr" value="[% p_descr %]" size="48">
+        <br>
+        Descr: <textarea name="descr" rows="4" cols="48">[% descr %]</textarea>
+        <br>
+
+        <input type="submit" value="Update">
+    </form>
+
+    <br>
+    <a href="/admin/note?do=delvers&id=[% id %]&note_id=[% note_id %]&page_id=[% page_id %]"
+        onclick="return confirm('Delete?');">X</a>
+</div>
