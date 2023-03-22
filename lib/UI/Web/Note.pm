@@ -300,14 +300,46 @@ sub one {
         );
     }
 
+    my $h_versions = $h_note->{versions};
+    my $versions   = q{};
+    foreach my $id ( sort keys %{$h_versions} ) {
+        my $h = $h_versions->{$id};
+
+        $h->{page_id} = $page_id;
+
+        my ( $h_lang, $err_str2 ) = $self->app->ctl->sh->one( 'lang', $h->{lang_id} );
+        $h->{lang_isocode} = $h_lang->{isocode};
+
+        $versions .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $skin_tpl_path,
+            tpl_name => 'a-version-item.html',
+            h_vars   => $h,
+        );
+    }
+
+    my ( $h_langs, $err_str3 ) = $self->app->ctl->sh->list('lang');
+    my $lang_options = q{};
+    foreach my $id ( sort keys %{$h_langs} ) {
+        my $h = $h_langs->{$id};
+
+        $lang_options .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $skin_tpl_path,
+            tpl_name => 'a-lang-option.html',
+            h_vars   => $h,
+        );
+    }
+
     my $html_body = UI::Web::Renderer::parse_html(
         root_dir => $root_dir,
         tpl_path => $skin_tpl_path,
         tpl_name => 'a-edit.html',
         h_vars   => {
             %{$h_note},
-            images => $images,
-            # versions => $versions,
+            images       => $images,
+            versions     => $versions,
+            lang_options => $lang_options,
         },
     );
 

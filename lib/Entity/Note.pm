@@ -150,15 +150,23 @@ sub one {
         {
             note_id => $self->id,
         },
-        [
-            {
-                orderby  => 'id',
-                orderhow => 'ASC',
-            },
-        ],
+        # [
+        #     {
+        #         orderby  => 'id',
+        #         orderhow => 'ASC',
+        #     },
+        # ],
     );
 
-    $h_data->{images} = $h_images;
+    my ( $h_versions, $err_str3 ) = $self->ctl->sh->list(
+        'note_version',
+        {
+            note_id => $self->id,
+        },
+    );
+
+    $h_data->{images}   = $h_images;
+    $h_data->{versions} = $h_versions;
     # $h_data->{ctl}    = $self->ctl; # ??? why
 
     return {
@@ -324,6 +332,110 @@ sub del {
 
     my $url = $app->config->{site}->{host} . '/admin/note?do=list';
     $url .= '&fltr_page_id=' . $h_data->{page_id};
+
+    return {
+        url => $url,
+    };
+}
+
+sub addvers {
+    my ( $self, $h_params ) = @_;
+
+    my $lang_id = $h_params->{lang_id} || 0;
+    my $name    = $h_params->{name}    || q{};
+
+    if ( !$name ) {
+        return {
+            err => 'name is required',
+        };
+    }
+
+    my ( $id, $err_str ) = $self->ctl->sh->add(
+        'note_version', {
+            note_id => $self->id,
+            lang_id => $lang_id,
+            name    => $name,
+        },
+    );
+    if ($err_str) {
+        return {
+            err => 'failed to add note_version: ' . $err_str,
+        };
+    }
+
+    my $app = $self->ctl->sh->app;
+    my $url = $app->config->{site}->{host} . '/admin/note?do=one';
+    $url .= '&id=' . $self->id . '&page_id=' . $self->page_id;
+
+    return {
+        url => $url,
+    };
+}
+
+sub delvers {
+    my ( $self, $h_params ) = @_;
+
+    my $note_id = $h_params->{note_id} || 0;
+    my $page_id = $h_params->{page_id} || 0;
+    my $id      = $h_params->{id}      || 0;
+
+    # TODO: deletion of lang_id=1 not allowed
+
+    my $rv = $self->ctl->sh->del(
+        'note_version', {
+            id => $id,
+        },
+    );
+
+    my $app = $self->ctl->sh->app;
+    my $url = $app->config->{site}->{host} . '/admin/note?do=one';
+    $url .= '&id=' . $note_id . '&page_id=' . $page_id;
+
+    return {
+        url => $url,
+    };
+}
+
+sub updvers {
+    my ( $self, $h_params ) = @_;
+
+    my $note_id = $h_params->{note_id} || 0;
+    my $id      = $h_params->{id}      || 0;
+    my $name    = $h_params->{name}    || q{};
+    my $descr   = $h_params->{descr}   || q{};
+    my $p_title = $h_params->{p_title} || q{};
+    my $p_descr = $h_params->{p_descr} || q{};
+
+    if ( !$id ) {
+        return {
+            err => 'id is required',
+        };
+    }
+
+    if ( !$name ) {
+        return {
+            err => 'name is required',
+        };
+    }
+
+    my $err_str = $self->ctl->sh->upd(
+        'note_version', {
+            id      => $id,
+            name    => $name,
+            descr   => $descr,
+            p_title => $p_title,
+            p_descr => $p_descr,
+        },
+    );
+    if ($err_str) {
+        return {
+            err => 'failed to upd note_version: ' . $err_str,
+        };
+    }
+
+    my $app = $self->ctl->sh->app;
+    my $url = $app->config->{site}->{host} . '/admin/note?do=one';
+    $url .= '&id=' . $note_id . '&page_id=' . $self->page_id;
 
     return {
         url => $url,
