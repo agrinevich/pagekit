@@ -328,8 +328,11 @@ sub _build_list_items {
             tpl_path      => $tpl_path,
             skin_tpl_path => $skin_tpl_path,
             one_path      => $one_path,
-            h_vars        => $h_vars,
-            h_nis         => $h_nis,
+            h_vars        => {
+                %{$h},
+                %{$h_vars},
+            },
+            h_nis => $h_nis,
         );
     }
 
@@ -445,6 +448,23 @@ sub _build_one_main {
     # my $lang_path     = $args{lang_path}     // q{};
 
     # images
+    my $img_list_la = q{};
+    foreach my $ni_id ( sort keys %{$h_nis} ) {
+        my $h_ni = $h_nis->{$ni_id};
+
+        $img_list_la .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $skin_tpl_path,
+            tpl_name => 'f-one-img-la.html',
+            h_vars   => {
+                name    => $h_vars->{name},
+                id      => $h_ni->{id},
+                num     => $h_ni->{num},
+                path_la => $h_ni->{path_la},
+            },
+        );
+    }
+    $h_vars->{img_list_la} = $img_list_la;
 
     my $page_main = UI::Web::Renderer::parse_html(
         root_dir => $root_dir,
