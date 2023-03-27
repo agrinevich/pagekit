@@ -297,24 +297,24 @@ sub del {
         };
     }
 
-    my ( $h_data, $err_str ) = $self->ctl->sh->one( 'note', $self->id );
+    my ( $h_note, $err_str ) = $self->ctl->sh->one( 'note', $self->id );
     if ($err_str) {
         return {
             err => 'failed to read note: ' . $err_str,
         };
     }
-    if ( !$h_data ) {
+    if ( !$h_note ) {
         return {
             err => 'note ' . $self->id . ' does not exist',
         };
     }
 
-    my $rv1 = $self->ctl->sh->del( 'note_version', { note_id => $self->id } );
+    my ( $h_page, $err_str2 ) = $self->ctl->sh->one( 'page', $h_note->{page_id} );
 
     my $app       = $self->ctl->gh->app;
     my $html_path = $app->config->{path}->{html};
 
-    my ( $h_images, $err_str2 ) = $self->ctl->sh->list(
+    my ( $h_images, $err_str3 ) = $self->ctl->sh->list(
         'note_image',
         { note_id => $self->id },
     );
@@ -327,11 +327,27 @@ sub del {
     }
     my $rv2 = $self->ctl->sh->del( 'note_image', { note_id => $self->id } );
 
-    # FIXME: delete note page file
+    my $rv1 = $self->ctl->sh->del( 'note_version', { note_id => $self->id } );
+
+    # delete note file for each language
+    my ( $h_langs, $err_str4 ) = $self->ctl->sh->list('lang');
+    foreach my $id ( keys %{$h_langs} ) {
+        my $h = $h_langs->{$id};
+
+        my $lang_path = $h->{nick} ? q{/} . $h->{nick} : q{};
+
+        my $note_path = $self->ctl->gh->get_note_path(
+            lang_path => $lang_path,
+            page_path => $h_page->{path},
+            id        => $self->id,
+        );
+
+        $self->ctl->gh->delete_file( file_path => $html_path . $note_path );
+    }
     my $rv = $self->ctl->sh->del( 'note', { id => $self->id } );
 
     my $url = $app->config->{site}->{host} . '/admin/note?do=list';
-    $url .= '&fltr_page_id=' . $h_data->{page_id};
+    $url .= '&fltr_page_id=' . $h_note->{page_id};
 
     return {
         url => $url,
@@ -379,7 +395,13 @@ sub delvers {
     my $page_id = $h_params->{page_id} || 0;
     my $id      = $h_params->{id}      || 0;
 
-    # TODO: deletion of lang_id=1 not allowed
+    # deletion of lang_id=1 not allowed
+    my ( $h_nv, $err_str1 ) = $self->ctl->sh->one( 'note_version', $id );
+    if ( $h_nv->{lang_id} == 1 ) {
+        return {
+            err => 'deletion of main lang version is not allowed',
+        };
+    }
 
     my $rv = $self->ctl->sh->del(
         'note_version', {

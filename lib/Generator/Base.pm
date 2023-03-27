@@ -637,6 +637,16 @@ sub upload_file {
     return;
 }
 
+sub get_note_path {
+    my ( undef, %args ) = @_;
+
+    my $lang_path = $args{lang_path};
+    my $page_path = $args{page_path};
+    my $id        = $args{id};
+
+    return $lang_path . $page_path . '/' . $id . '.html';
+}
+
 sub set_mod_config {
     my ( $self, %args ) = @_;
 
