@@ -13,6 +13,7 @@ use POSIX qw( strftime );
 
 use App::Files;
 use Generator::Renderer;
+use Generator::Base;
 
 our $VERSION = '0.2';
 
@@ -32,8 +33,6 @@ sub gen {
     my $page_path = $args{page_path} // q{};
     my $page_id   = $args{page_id}   // 0;
 
-    my %marks = ();
-
     my $out_dir = $root_dir . $html_path . $lang_path . $page_path;
     if ( !-d $out_dir ) {
         App::Files::make_path(
@@ -41,17 +40,18 @@ sub gen {
         );
     }
 
-    # my ( $h_pagemarks, $err_str ) = $sh->list(
-    #     'pagemark', {
-    #         page_id => $page_id,
-    #         lang_id => $lang_id,
-    #     },
-    # );
-    # while ( my ( $mark_id, $h_mark ) = each( %{$h_pagemarks} ) ) {
-    #     my $markname  = $h_mark->{name};
-    #     my $markvalue = $h_mark->{value};
-    #     $marks{$markname} = $markvalue;
-    # }
+    my %pagemarks = ();
+    my ( $h_pagemarks, $err_str ) = $sh->list(
+        'pagemark', {
+            page_id => $page_id,
+            lang_id => $lang_id,
+        },
+    );
+    while ( my ( $mark_id, $h_mark ) = each( %{$h_pagemarks} ) ) {
+        my $markname  = $h_mark->{name};
+        my $markvalue = $h_mark->{value};
+        $pagemarks{$markname} = $markvalue;
+    }
 
     my $o_mod_config = $gh->get_mod_config(
         mod       => 'note',
@@ -94,6 +94,7 @@ sub gen {
             page_path     => $page_path,
             lang_path     => $lang_path,
             html_path     => $html_path,
+            pagemarks     => \%pagemarks,
         );
     }
 
@@ -120,6 +121,7 @@ sub _gen_list {
     my $sh           = $args{sh};
     my $gh           = $args{gh};
     my $o_mod_config = $args{o_mod_config};
+    my $h_pagemarks  = $args{pagemarks};
 
     my %marks = (
         site_host     => $args{site_host},
@@ -129,11 +131,8 @@ sub _gen_list {
         mobile_navi   => $args{m_navi},
     );
 
-    $marks{page_title} = _build_list_title(
-        page_id => $page_id,
-        lang_id => $lang_id,
-        p       => $p,
-    );
+    my $p_suffix = $p > 0 ? sprintf( '%d', $p + 1 ) : q{};
+    $marks{page_title} = $h_pagemarks->{page_title} . q{ } . $p_suffix;
 
     $marks{page_main} = _build_list_main(
         sh            => $sh,
@@ -154,6 +153,7 @@ sub _gen_list {
         p_qty         => $p_qty,
         npp           => $npp,
         total_qty     => $total_qty,
+        pagemarks     => $h_pagemarks,
     );
 
     my $suffix   = $p > 0 ? $p : q{};
@@ -172,21 +172,12 @@ sub _gen_list {
     return;
 }
 
-sub _build_list_title {
-    my (%args) = @_;
-
-    my $p       = $args{p}       // 0;
-    my $page_id = $args{page_id} // 0;
-    my $lang_id = $args{lang_id} // 0;
-
-    return 'Page title here';
-}
-
 sub _build_list_main {
     my (%args) = @_;
 
     my $sh           = $args{sh};
     my $o_mod_config = $args{o_mod_config};
+    my $h_pagemarks  = $args{pagemarks};
 
     my $root_dir      = $args{root_dir}      // q{};
     my $html_path     = $args{html_path}     // q{};
@@ -229,6 +220,7 @@ sub _build_list_main {
         skin_tpl_path => $skin_tpl_path,
         tpl_item      => 'f-list-item.html',
         a_items       => $h_notes,
+        pagemarks     => $h_pagemarks,
         h_vars        => {
             page_id       => $page_id,
             lang_id       => $lang_id,
@@ -269,7 +261,8 @@ sub _build_list_main {
 sub _build_list_items {
     my (%args) = @_;
 
-    my $sh = $args{sh};
+    my $sh          = $args{sh};
+    my $h_pagemarks = $args{pagemarks};
 
     my $root_dir      = $args{root_dir}      // q{};
     my $html_path     = $args{html_path}     // q{};
@@ -309,7 +302,11 @@ sub _build_list_items {
             },
         );
 
-        my $one_path = $h_vars->{lang_path} . $h_vars->{page_path} . '/' . $id . '.html';
+        my $one_path = Generator::Base->get_note_path(
+            lang_path => $h_vars->{lang_path},
+            page_path => $h_vars->{page_path},
+            id        => $id,
+        );
         $h->{path} = $one_path;
 
         $result .= UI::Web::Renderer::parse_html(
@@ -332,7 +329,8 @@ sub _build_list_items {
                 %{$h},
                 %{$h_vars},
             },
-            h_nis => $h_nis,
+            h_nis     => $h_nis,
+            pagemarks => $h_pagemarks,
         );
     }
 
@@ -391,13 +389,12 @@ sub _gen_one {
     my $page_id       = $args{page_id}       // 0;
     my $lang_id       = $args{lang_id}       // 0;
 
-    my $h_vars = $args{h_vars};
-    my $h_nis  = $args{h_nis};
+    my $h_vars      = $args{h_vars};
+    my $h_nis       = $args{h_nis};
+    my $h_pagemarks = $args{pagemarks};
 
-    $h_vars->{page_title} = _build_one_title(
-        # page_id => $page_id,
-        # lang_id => $lang_id,
-    );
+    $h_vars->{page_title} = $h_vars->{p_title} || $h_vars->{name};
+    $h_vars->{page_descr} = $h_vars->{p_descr};
 
     $h_vars->{page_main} = _build_one_main(
         root_dir      => $root_dir,
@@ -421,15 +418,6 @@ sub _gen_one {
     );
 
     return;
-}
-
-sub _build_one_title {
-    my (%args) = @_;
-
-    my $page_id = $args{page_id} // 0;
-    my $lang_id = $args{lang_id} // 0;
-
-    return 'One Page title here';
 }
 
 sub _build_one_main {
