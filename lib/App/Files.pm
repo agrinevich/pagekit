@@ -120,6 +120,11 @@ sub copy_dir_recursive {
     my $src_dir = $args{src_dir};
     my $dst_dir = $args{dst_dir};
 
+    my $s_dir = Path::Tiny->new($src_dir);
+    if ( !$s_dir->is_dir() ) {
+        croak( 'Failed to copy_dir_recursive: ' . $s_dir . ' does not exist!' );
+    }
+
     # if dst_dir exists - delete it first
     my $o_dir = Path::Tiny->new($dst_dir);
     if ( $o_dir->is_dir() ) {

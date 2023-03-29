@@ -301,6 +301,12 @@ sub _build_list_items {
                 note_id => $id,
             },
         );
+        my $h_ni_1;
+        foreach my $ni_id ( sort keys %{$h_nis} ) {
+            $h_ni_1 = $h_nis->{$ni_id};
+            last;
+        }
+        $h->{img_path_sm} = $h_ni_1->{path_sm};
 
         my $one_path = Generator::Base->get_note_path(
             lang_path => $h_vars->{lang_path},

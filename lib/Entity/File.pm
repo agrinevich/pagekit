@@ -292,17 +292,19 @@ sub bkprestore {
 
     # restore html
     {
-        $self->ctl->gh->empty_dir(
-            path => $app->config->{path}->{html},
-        );
-
         my $src_path = $tmp_path . '/html';
         my $dst_path = $app->config->{path}->{html};
 
-        $self->ctl->gh->copy_dir(
-            src_path => $src_path,
-            dst_path => $dst_path,
-        );
+        if ( -d $root_dir . $src_path && -d $root_dir . $dst_path ) {
+            $self->ctl->gh->empty_dir(
+                path => $app->config->{path}->{html},
+            );
+
+            $self->ctl->gh->copy_dir(
+                src_path => $src_path,
+                dst_path => $dst_path,
+            );
+        }
     }
 
     # restore storage
