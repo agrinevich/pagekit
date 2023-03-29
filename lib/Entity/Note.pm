@@ -288,6 +288,10 @@ sub upd {
     };
 }
 
+#
+# TODO: when you del_all notes - reset mod_id=0
+#
+
 sub del {
     my ($self) = @_;
 

@@ -456,10 +456,15 @@ sub pfupload {
     my $html_path = $app->config->{path}->{html};
     my $page_dir  = $app->root_dir . $html_path . $lang_path . $h_page->{path};
 
-    $self->ctl->gh->upload_file(
+    my $err_str3 = $self->ctl->gh->upload_file(
         dir     => $page_dir,
         uploads => $uploads,
     );
+    if ($err_str3) {
+        return {
+            err => 'Failed to pfupload: ' . $err_str3,
+        };
+    }
 
     my $url = $app->config->{site}->{host} . '/admin/pagemark?do=list';
     $url .= '&fltr_page_id=' . $params->{page_id};
