@@ -158,20 +158,23 @@ sub del {
         };
     }
 
-    # delete all dependent pagemarks first
-    my $err_str2 = $self->ctl->sh->del( 'pagemark', { lang_id => $self->id } );
-    if ($err_str2) {
-        return {
-            err => $err_str2,
-        };
-    }
+    # TODO: delete all note versions and files/dirs
+    # TODO: delete all page versions files/dirs
 
-    my $err_str = $self->ctl->sh->del( 'lang', { id => $self->id } );
-    if ($err_str) {
-        return {
-            err => $err_str,
-        };
-    }
+    # delete all dependent pagemarks first
+    # my $err_str2 = $self->ctl->sh->del( 'pagemark', { lang_id => $self->id } );
+    # if ($err_str2) {
+    #     return {
+    #         err => $err_str2,
+    #     };
+    # }
+
+    # my $err_str = $self->ctl->sh->del( 'lang', { id => $self->id } );
+    # if ($err_str) {
+    #     return {
+    #         err => $err_str,
+    #     };
+    # }
 
     my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . q{/admin/lang?do=list};

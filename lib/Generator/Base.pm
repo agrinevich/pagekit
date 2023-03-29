@@ -1,6 +1,7 @@
 package Generator::Base;
 
 use Carp qw(carp croak);
+use English qw( -no_match_vars );
 use POSIX ();
 use POSIX qw(strftime);
 
@@ -629,7 +630,8 @@ sub upload_file {
 
     my $file_tmp = $file->path();
     my $file_dst = $page_dir . q{/} . $name . q{.} . $ext;
-    rename $file_tmp, $file_dst;
+    my $success  = rename $file_tmp, $file_dst;
+    return $OS_ERROR if !$success;
 
     my $mode_readable = oct '644';
     chmod $mode_readable, $file_dst;

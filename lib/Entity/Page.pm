@@ -178,12 +178,15 @@ sub upd {
     if ( !$self->parent_id ) {
         $self->parent_id(0);
     }
-
     if ( !$self->parent_id && $self->id > 1 ) {
         return {
             err => 'parent_id is required to upd page',
         };
     }
+
+    # FIXME: if parent_id changed - move all dirs and files
+
+    # FIXME: if nick changed - move all dirs and files
 
     my $parent_path = $self->_build_path( id => $self->parent_id );
     my $path        = $parent_path . q{/} . $self->nick;
@@ -231,19 +234,7 @@ sub upd {
 sub del {
     my ($self) = @_;
 
-    if ( !$self->id ) {
-        return {
-            err => 'id is required to delete page',
-        };
-    }
-
-    if ( $self->id == 1 ) {
-        return {
-            err => 'do not delete root page',
-        };
-    }
-
-    my $err_str = $self->_go_del( { parent_id => $self->id } );
+    my $err_str = $self->_go_del( { page_id => $self->id } );
     if ($err_str) {
         return {
             err => $err_str,
@@ -264,28 +255,35 @@ sub del {
 sub _go_del {
     my ( $self, $h_args ) = @_;
 
-    return 'positive parent_id required!' if !$h_args->{parent_id};
+    my $page_id = $h_args->{page_id};
 
-    my ( $h_children, $err_str3 ) = $self->ctl->sh->list(
-        'page',
-        {
-            parent_id => $h_args->{parent_id},
-        },
-    );
-    foreach my $child_id ( keys %{$h_children} ) {
-        my $err = $self->_go_del( { parent_id => $child_id } );
-        croak($err) if $err;
-    }
+    return 'positive page_id required!' if !$page_id;
 
-    my ( $h_page, $err_str1 ) = $self->ctl->sh->one( 'page', $self->id );
+    return 'do not delete root page!' if $page_id == 1;
+
+    my ( $h_page, $err_str1 ) = $self->ctl->sh->one( 'page', $page_id );
     if ($err_str1) {
         return $err_str1;
     }
 
-    # my $err_str2 = $self->ctl->sh->del( 'pagemark', { page_id => $self->id } );
-    # if ($err_str2) {
-    #     return $err_str2;
-    # }
+    if ( $h_page->{mod_id} == 1 ) {
+        return 'Delete notes for page ' . $h_page->{nick} . ' then try again.';
+    }
+
+    my ( $h_children, $err_str3 ) = $self->ctl->sh->list( 'page', { parent_id => $page_id } );
+    if ($err_str3) {
+        return $err_str3;
+    }
+
+    foreach my $child_id ( keys %{$h_children} ) {
+        my $err = $self->_go_del( { page_id => $child_id } );
+        croak($err) if $err;
+    }
+
+    my $err_str2 = $self->ctl->sh->del( 'pagemark', { page_id => $page_id } );
+    if ($err_str2) {
+        return $err_str2;
+    }
 
     # del files and dir for each language
     my ( $h_langs, $err_str5 ) = $self->ctl->sh->list('lang');
@@ -295,19 +293,15 @@ sub _go_del {
         my $lang_path = $h_lang->{nick} ? q{/} . $h_lang->{nick} : q{};
         my $page_path = $lang_path . $h_page->{path};
 
-        # $self->ctl->gh->empty_dir( path => $page_path );
+        $self->ctl->gh->empty_dir( path => $page_path );
 
-        # rmdir( $self->ctl->gh->app->root_dir . $page_path );
+        rmdir( $self->ctl->gh->app->root_dir . $page_path );
     }
 
-    #
-    # FIXME: del notes if any
-    #
-
-    # my $err_str4 = $self->ctl->sh->del( 'page', { id => $self->id } );
-    # if ($err_str4) {
-    #     return $err_str4;
-    # }
+    my $err_str4 = $self->ctl->sh->del( 'page', { id => $page_id } );
+    if ($err_str4) {
+        return $err_str4;
+    }
 
     return;
 }
