@@ -264,38 +264,50 @@ sub del {
 sub _go_del {
     my ( $self, $h_args ) = @_;
 
-    my ( $h_table, $err_str3 ) = $self->ctl->sh->list(
+    return 'positive parent_id required!' if !$h_args->{parent_id};
+
+    my ( $h_children, $err_str3 ) = $self->ctl->sh->list(
         'page',
         {
             parent_id => $h_args->{parent_id},
         },
     );
-    foreach my $child_id ( keys %{$h_table} ) {
-        # FIXME: check if children actually deleted
-        $self->_go_del( { parent_id => $child_id } );
+    foreach my $child_id ( keys %{$h_children} ) {
+        my $err = $self->_go_del( { parent_id => $child_id } );
+        croak($err) if $err;
     }
 
-    my $err_str2 = $self->ctl->sh->del( 'pagemark', { page_id => $self->id } );
-    if ($err_str2) {
-        return $err_str2;
+    my ( $h_page, $err_str1 ) = $self->ctl->sh->one( 'page', $self->id );
+    if ($err_str1) {
+        return $err_str1;
     }
 
-    #
-    # FIXME: del files
-    #
+    # my $err_str2 = $self->ctl->sh->del( 'pagemark', { page_id => $self->id } );
+    # if ($err_str2) {
+    #     return $err_str2;
+    # }
+
+    # del files and dir for each language
+    my ( $h_langs, $err_str5 ) = $self->ctl->sh->list('lang');
+    foreach my $lang_id ( keys %{$h_langs} ) {
+        my $h_lang = $h_langs->{$lang_id};
+
+        my $lang_path = $h_lang->{nick} ? q{/} . $h_lang->{nick} : q{};
+        my $page_path = $lang_path . $h_page->{path};
+
+        # $self->ctl->gh->empty_dir( path => $page_path );
+
+        # rmdir( $self->ctl->gh->app->root_dir . $page_path );
+    }
 
     #
     # FIXME: del notes if any
     #
 
-    my $err_str = $self->ctl->sh->del( 'page', { id => $self->id } );
-    if ($err_str) {
-        return $err_str;
-    }
-
-    #
-    # FIXME: del page dir
-    #
+    # my $err_str4 = $self->ctl->sh->del( 'page', { id => $self->id } );
+    # if ($err_str4) {
+    #     return $err_str4;
+    # }
 
     return;
 }

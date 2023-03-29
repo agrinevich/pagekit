@@ -72,8 +72,10 @@ sub init {
 
     App::Files::make_path( path => $root_dir . $o_conf->{path}->{bkp} );
     App::Files::make_path( path => $root_dir . $o_conf->{path}->{html} );
-    App::Files::make_path( path => $root_dir . $o_conf->{path}->{tpl} );
+    App::Files::make_path( path => $root_dir . $o_conf->{path}->{templates} );
+    App::Files::make_path( path => $root_dir . $o_conf->{path}->{img} );
     App::Files::make_path( path => $root_dir . '/log' );
+    App::Files::make_path( path => $root_dir . '/tmp' );
 
     my $strg_type = $o_conf->{storage}->{type};
 

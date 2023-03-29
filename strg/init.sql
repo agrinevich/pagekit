@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS 'page' (
 INSERT INTO 'page' ('hidden','prio','parent_id','mod_id','nick','name','path') VALUES (0, 0, 0, 0, '', 'Home', '');
 -- ALTER TABLE 'page' ADD 'hidden' INT NOT NULL DEFAULT 0;
 -- ALTER TABLE 'page' ADD 'prio' INT NOT NULL DEFAULT 0;
+-- ALTER TABLE 'page' ADD 'mod_id' INT NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS 'pagemark' (
     'id'      INTEGER PRIMARY KEY,

@@ -180,9 +180,9 @@ sub del {
         $del .= " WHERE $pairs";
     }
 
-    my $rv = $self->dbh->do($del) or croak $self->dbh->errstr;
+    $self->dbh->do($del) or return $self->dbh->errstr;
 
-    return $rv;
+    return;
 }
 
 sub backup_create {
