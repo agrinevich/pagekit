@@ -288,15 +288,60 @@ sub upd {
     };
 }
 
-#
-# TODO: when you del_all notes - reset mod_id=0
-#
 sub delall {
     my ( $self, $h_params ) = @_;
 
     my $page_id = $h_params->{page_id} || 0;
 
-    return;
+    my ( $h_page, $err_str2 ) = $self->ctl->sh->one( 'page', $page_id );
+    if ($err_str2) {
+        return {
+            err => $err_str2,
+        };
+    }
+
+    my ( $h_notes, $err_str ) = $self->ctl->sh->list(
+        'note',
+        { page_id => $page_id },
+    );
+    if ($err_str) {
+        return {
+            err => $err_str,
+        };
+    }
+
+    foreach my $note_id ( keys %{$h_notes} ) {
+        my $h_result = $self->del(
+            {
+                id        => $note_id,
+                page_id   => $page_id,
+                page_path => $h_page->{path},
+            }
+        );
+        if ( exists $h_result->{err} ) {
+            return $h_result;
+        }
+    }
+
+    # reset page mod_id = 0 to allow page deletion
+    my $err_str3 = $self->ctl->sh->upd(
+        'page', {
+            id     => $page_id,
+            mod_id => 0,
+        },
+    );
+    if ($err_str3) {
+        return {
+            err => 'failed to upd page: ' . $err_str3,
+        };
+    }
+
+    my $app = $self->ctl->sh->app;
+    my $url = $app->config->{site}->{host} . '/admin/page';
+
+    return {
+        url => $url,
+    };
 }
 
 sub del {
@@ -324,7 +369,6 @@ sub del {
     else {
         my ( $h_page, $err_str2 ) = $self->ctl->sh->one( 'page', $page_id );
         $page_path = $h_page->{path};
-
     }
 
     my $app       = $self->ctl->gh->app;

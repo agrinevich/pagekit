@@ -22,7 +22,7 @@
 <table>
     <tr style="background-color:lightgreen;">
         <td>
-            <form name="page-add" action="/admin/note" method="POST">
+            <form name="note-add" action="/admin/note" method="POST">
                 <input type="hidden" name="do" value="add">
                 <input type="hidden" name="page_id" value="[% page_id %]">
                 <input type="hidden" name="page_name" value="[% page_name %]">
@@ -30,7 +30,16 @@
                 <br>
                 <!-- <textarea placeholder="Description in primary language" name="descr" rows="4" cols="60"></textarea>
                 <br> -->
-                <input type="submit" value="Add">
+                <input type="submit" value="Add New Note">
+            </form>
+
+            <br>
+
+            <form name="del-all-notes" action="/admin/note" method="GET">
+                <input type="hidden" name="do" value="delall">
+                <input type="hidden" name="page_id" value="[% page_id %]">
+                <br>
+                <input type="submit" value="Delete All Notes">
             </form>
         </td>
         <td>
