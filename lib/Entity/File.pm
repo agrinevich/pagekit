@@ -276,7 +276,9 @@ sub bkprestore {
     }
 
     # backup is extracted here
-    my ( $bkp_name, undef ) = split /\./, $fname;
+    my @chunks   = split /\./, $fname;
+    my $ext      = pop @chunks;
+    my $bkp_name = join q{.}, @chunks;
     my $tmp_path = $bkps_path . q{/} . $bkp_name;
 
     # restore templates
