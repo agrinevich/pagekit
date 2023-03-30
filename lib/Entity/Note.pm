@@ -291,67 +291,85 @@ sub upd {
 #
 # TODO: when you del_all notes - reset mod_id=0
 #
+sub delall {
+    my ( $self, $h_params ) = @_;
+
+    my $page_id = $h_params->{page_id} || 0;
+
+    return;
+}
 
 sub del {
-    my ($self) = @_;
+    my ( $self, $h_params ) = @_;
 
-    if ( !$self->id ) {
+    my $id      = $h_params->{id}      || 0;
+    my $page_id = $h_params->{page_id} || 0;
+
+    if ( !$id ) {
         return {
             err => 'id is required',
         };
     }
 
-    my ( $h_note, $err_str ) = $self->ctl->sh->one( 'note', $self->id );
-    if ($err_str) {
+    if ( !$page_id ) {
         return {
-            err => 'failed to read note: ' . $err_str,
-        };
-    }
-    if ( !$h_note ) {
-        return {
-            err => 'note ' . $self->id . ' does not exist',
+            err => 'page_id is required',
         };
     }
 
-    my ( $h_page, $err_str2 ) = $self->ctl->sh->one( 'page', $h_note->{page_id} );
+    my $page_path;
+    if ( exists $h_params->{page_path} ) {
+        $page_path = $h_params->{page_path};
+    }
+    else {
+        my ( $h_page, $err_str2 ) = $self->ctl->sh->one( 'page', $page_id );
+        $page_path = $h_page->{path};
+
+    }
 
     my $app       = $self->ctl->gh->app;
     my $html_path = $app->config->{path}->{html};
 
-    my ( $h_images, $err_str3 ) = $self->ctl->sh->list(
-        'note_image',
-        { note_id => $self->id },
-    );
-    foreach my $id ( keys %{$h_images} ) {
-        my $path_sm = $h_images->{$id}->{path_sm};
-        my $path_la = $h_images->{$id}->{path_la};
+    # delete note images
+    {
+        my ( $h_images, $err_str3 ) = $self->ctl->sh->list(
+            'note_image',
+            { note_id => $id },
+        );
+        foreach my $img_id ( keys %{$h_images} ) {
+            my $path_sm = $h_images->{$img_id}->{path_sm};
+            my $path_la = $h_images->{$img_id}->{path_la};
 
-        $self->ctl->gh->delete_file( file_path => $html_path . $path_la );
-        $self->ctl->gh->delete_file( file_path => $html_path . $path_sm );
+            $self->ctl->gh->delete_file( file_path => $html_path . $path_la );
+            $self->ctl->gh->delete_file( file_path => $html_path . $path_sm );
+        }
+        my $rv2 = $self->ctl->sh->del( 'note_image', { note_id => $id } );
     }
-    my $rv2 = $self->ctl->sh->del( 'note_image', { note_id => $self->id } );
 
-    my $rv1 = $self->ctl->sh->del( 'note_version', { note_id => $self->id } );
+    # delete note lang versions
+    my $rv1 = $self->ctl->sh->del( 'note_version', { note_id => $id } );
 
-    # delete note file for each language
+    # delete note html files (for each language)
     my ( $h_langs, $err_str4 ) = $self->ctl->sh->list('lang');
-    foreach my $id ( keys %{$h_langs} ) {
-        my $h = $h_langs->{$id};
+    foreach my $lang_id ( keys %{$h_langs} ) {
+        my $h = $h_langs->{$lang_id};
 
         my $lang_path = $h->{nick} ? q{/} . $h->{nick} : q{};
 
         my $note_path = $self->ctl->gh->get_note_path(
             lang_path => $lang_path,
-            page_path => $h_page->{path},
-            id        => $self->id,
+            page_path => $page_path,
+            id        => $id,
         );
 
         $self->ctl->gh->delete_file( file_path => $html_path . $note_path );
     }
-    my $rv = $self->ctl->sh->del( 'note', { id => $self->id } );
+
+    # delete note from DB
+    my $rv = $self->ctl->sh->del( 'note', { id => $id } );
 
     my $url = $app->config->{site}->{host} . '/admin/note?do=list';
-    $url .= '&fltr_page_id=' . $h_note->{page_id};
+    $url .= '&fltr_page_id=' . $page_id;
 
     return {
         url => $url,
