@@ -78,7 +78,7 @@ sub one {
     my $root_dir = $self->app->root_dir;
     my $tpl_path = $self->app->config->{path}->{templates};
 
-    my ( $h_table, $err_str ) = $self->app->ctl->sh->list('page');
+    my ( $h_pages, $err_str ) = $self->app->ctl->sh->list('page');
 
     my ( $h_mods, $err_str2 ) = $self->app->ctl->sh->list('mod');
     $h_mods->{0} = {
@@ -88,7 +88,7 @@ sub one {
     };
 
     # parent can be anyone except itself
-    my %filtered = %{$h_table};
+    my %filtered = %{$h_pages};
     my $id       = $h_page->{id};
     delete $filtered{$id};
 
@@ -99,6 +99,7 @@ sub one {
         a_items   => \%filtered,
         parent_id => 0,
         level     => 0,
+        id_sel    => $h_page->{parent_id},
     );
 
     my $mod_options = _build_list2(
@@ -146,8 +147,8 @@ sub _build_list {
     my $tpl_path  = $args{tpl_path}  // q{};
     my $h_table   = $args{a_items}   // {};
     my $parent_id = $args{parent_id} // 0;
-    my $id_sel    = $args{id_sel}    // 0;
     my $level     = $args{level}     // 0;
+    my $id_sel    = $args{id_sel}    // 0;
 
     if ( $level > 5 ) {
         carp 'recursion level > 5';

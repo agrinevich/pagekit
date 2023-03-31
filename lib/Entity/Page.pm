@@ -118,8 +118,14 @@ sub add {
         };
     }
 
-    my $parent_path = $self->_build_path( id => $self->parent_id );
-    my $path        = $parent_path . q{/} . $self->nick;
+    my ( $h_parent, $err_str1 ) = $self->ctl->sh->one( 'page', $self->parent_id );
+    my $path;
+    if ( $h_parent->{path} eq q{/} ) {
+        $path = $h_parent->{path} . $self->nick;
+    }
+    else {
+        $path = $h_parent->{path} . q{/} . $self->nick;
+    }
     $self->path($path);
 
     my ( $h_duplicates, $err_str ) = $self->ctl->sh->list( 'page', { path => $path } );
@@ -184,23 +190,36 @@ sub upd {
         };
     }
 
-    # FIXME: if parent_id changed - move all dirs and files
+    my ( $h_page,   $err_str1 ) = $self->ctl->sh->one( 'page', $self->id );
+    my ( $h_parent, $err_str3 ) = $self->ctl->sh->one( 'page', $self->parent_id );
 
-    # FIXME: if nick changed - move all dirs and files
+    # FIXME: if parent_id or nick changed - move all dirs and files
+    if ( $h_page->{parent_id} != $self->parent_id || $h_page->{nick} ne $self->nick ) {
+        my $path;
+        if ( $h_parent->{path} eq q{/} ) {
+            $path = $h_parent->{path} . $self->nick;
+        }
+        else {
+            $path = $h_parent->{path} . q{/} . $self->nick;
+        }
+        $self->path($path);
 
-    my $parent_path = $self->_build_path( id => $self->parent_id );
-    my $path        = $parent_path . q{/} . $self->nick;
-    $self->path($path);
+        my ( $h_found, $err_str ) = $self->ctl->sh->list( 'page', { path => $path } );
+        my %found = %{$h_found};
+        delete $found{ $self->id };
+        if ( scalar keys %found ) {
+            return {
+                err => "page $path exists already",
+            };
+        }
 
-    my ( $h_found, $err_str ) = $self->ctl->sh->list( 'page', { path => $path } );
-    my %found = %{$h_found};
-    delete $found{ $self->id };
-    if ( scalar keys %found ) {
-        return {
-            err => "page $path exists already",
-        };
+        # move all dirs and files
+    }
+    else {
+        $self->path( $h_page->{path} );
     }
 
+    # TODO: do we need this name at all?
     if ( !$self->name ) {
         $self->name = $self->nick;
     }
@@ -309,32 +328,32 @@ sub _go_del {
 #
 # recursive
 #
-sub _build_path {
-    my ( $self, %args ) = @_;
+# sub _build_path {
+#     my ( $self, %args ) = @_;
 
-    my $id = $args{id};
+#     my $id = $args{id};
 
-    my ( $h_data, $err_str ) = $self->ctl->sh->one( 'page', $id );
-    if ( !$h_data ) {
-        return q{};
-    }
+#     my ( $h_data, $err_str ) = $self->ctl->sh->one( 'page', $id );
+#     if ( !$h_data ) {
+#         return q{};
+#     }
 
-    my $parent_id = $h_data->{parent_id} // 0;
-    my $nick      = $h_data->{nick};
+#     my $parent_id = $h_data->{parent_id} // 0;
+#     my $nick      = $h_data->{nick};
 
-    #
-    # TODO: fix redundant slash for some cases
-    #
-    my $path = $nick ? q{/} . $nick : q{};
+#     #
+#     # TODO: fix redundant slash for some cases
+#     #
+#     my $path = $nick ? q{/} . $nick : q{};
 
-    if ( $parent_id > 0 ) {
-        $path = $self->_build_path(
-            id => $parent_id,
-        ) . $path;
-    }
+#     if ( $parent_id > 0 ) {
+#         $path = $self->_build_path(
+#             id => $parent_id,
+#         ) . $path;
+#     }
 
-    return $path;
-}
+#     return $path;
+# }
 
 sub generate {
     my ($self) = @_;
