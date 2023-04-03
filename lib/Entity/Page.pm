@@ -195,7 +195,7 @@ sub upd {
     my ( $h_page,   $err_str1 ) = $self->ctl->sh->one( 'page', $self->id );
     my ( $h_parent, $err_str3 ) = $self->ctl->sh->one( 'page', $self->parent_id );
 
-    # FIXME: if parent_id or nick changed - move all dirs and files
+    # if path changed - move all dirs and files
     if ( $h_page->{parent_id} != $self->parent_id || $h_page->{nick} ne $self->nick ) {
         my $old_path = $h_page->{path};
 
@@ -232,7 +232,6 @@ sub upd {
         $self->path( $h_page->{path} );
     }
 
-    # TODO: do we need this name at all?
     if ( !$self->name ) {
         $self->name = $self->nick;
     }
@@ -336,36 +335,6 @@ sub _go_del {
 
     return;
 }
-
-#
-# recursive
-#
-# sub _build_path {
-#     my ( $self, %args ) = @_;
-
-#     my $id = $args{id};
-
-#     my ( $h_data, $err_str ) = $self->ctl->sh->one( 'page', $id );
-#     if ( !$h_data ) {
-#         return q{};
-#     }
-
-#     my $parent_id = $h_data->{parent_id} // 0;
-#     my $nick      = $h_data->{nick};
-
-#     #
-#     # TODO: fix redundant slash for some cases
-#     #
-#     my $path = $nick ? q{/} . $nick : q{};
-
-#     if ( $parent_id > 0 ) {
-#         $path = $self->_build_path(
-#             id => $parent_id,
-#         ) . $path;
-#     }
-
-#     return $path;
-# }
 
 sub generate {
     my ($self) = @_;
