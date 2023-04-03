@@ -190,30 +190,43 @@ sub upd {
         };
     }
 
+    my $app = $self->ctl->sh->app;
+
     my ( $h_page,   $err_str1 ) = $self->ctl->sh->one( 'page', $self->id );
     my ( $h_parent, $err_str3 ) = $self->ctl->sh->one( 'page', $self->parent_id );
 
     # FIXME: if parent_id or nick changed - move all dirs and files
     if ( $h_page->{parent_id} != $self->parent_id || $h_page->{nick} ne $self->nick ) {
-        my $path;
+        my $old_path = $h_page->{path};
+
+        my $new_path;
         if ( $h_parent->{path} eq q{/} ) {
-            $path = $h_parent->{path} . $self->nick;
+            $new_path = $h_parent->{path} . $self->nick;
         }
         else {
-            $path = $h_parent->{path} . q{/} . $self->nick;
+            $new_path = $h_parent->{path} . q{/} . $self->nick;
         }
-        $self->path($path);
+        $self->path($new_path);
 
-        my ( $h_found, $err_str ) = $self->ctl->sh->list( 'page', { path => $path } );
+        my ( $h_found, $err_str ) = $self->ctl->sh->list( 'page', { path => $new_path } );
         my %found = %{$h_found};
         delete $found{ $self->id };
         if ( scalar keys %found ) {
             return {
-                err => "page $path exists already",
+                err => "page $new_path exists already",
             };
         }
 
         # move all dirs and files
+        my $err_str4 = $self->ctl->gh->move_dir(
+            src_path => $app->config->{path}->{html} . $old_path,
+            dst_path => $app->config->{path}->{html} . $new_path,
+        );
+        if ($err_str4) {
+            return {
+                err => 'failed to move_dir: ' . $err_str4,
+            };
+        }
     }
     else {
         $self->path( $h_page->{path} );
@@ -242,7 +255,6 @@ sub upd {
         };
     }
 
-    my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . q{/admin/page?do=one&id=} . $self->id;
 
     return {
