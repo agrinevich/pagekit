@@ -280,6 +280,7 @@ sub _child_links {
     my ( $h_pages, $err_str ) = $self->app->ctl->sh->list(
         'page', {
             parent_id => $parent_id,
+            hidden    => 0,
         },
     );
 
