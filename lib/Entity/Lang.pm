@@ -95,9 +95,29 @@ sub add {
     }
     $self->id($id);
 
-    #
-    # TODO: copy all marks for new lang
-    #
+    # copy all pagemarks from primary lang version
+    my ( $h_marks, $err3 ) = $self->ctl->sh->list( 'pagemark', { lang_id => 1 } );
+    if ($err3) {
+        return $err3;
+    }
+    foreach my $mark_id ( keys %{$h_marks} ) {
+        my $h_mark = $h_marks->{$mark_id};
+
+        my ( $id, $err_str21 ) = $self->ctl->sh->add(
+            'pagemark', {
+                page_id => $h_mark->{page_id},
+                lang_id => $id,
+                name    => $h_mark->{name},
+                value   => $h_mark->{value},
+            },
+        );
+        if ($err_str21) {
+            return {
+                err => 'failed to copypaste pagemark: ' . $err_str21,
+            };
+        }
+
+    }
 
     my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . q{/admin/lang?do=list};
