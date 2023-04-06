@@ -93,7 +93,7 @@ sub go_tree {
     my $cur_date  = $args{cur_date}  // q{};
 
     if ( $level > 5 ) {
-        carp 'recursion level > 5';
+        carp('recursion level > 5');
         return;
     }
 
