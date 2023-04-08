@@ -132,17 +132,19 @@ sub go_tree {
             tpl_path  => $tpl_path,
         );
 
-        my $map_item = Generator::Renderer::parse_html(
-            root_dir => $root_dir,
-            tpl_path => $tpl_path,
-            tpl_name => "sitemap-item.xml",
-            h_vars   => {
-                path      => $lang_path . $h->{path},
-                site_host => $site_host,
-                cur_date  => $cur_date,
-            },
-        );
-        push @{$a_map}, $map_item;
+        if ( !$h->{hidden} ) {
+            my $map_item = Generator::Renderer::parse_html(
+                root_dir => $root_dir,
+                tpl_path => $tpl_path,
+                tpl_name => "sitemap-item.xml",
+                h_vars   => {
+                    path      => $lang_path . $h->{path},
+                    site_host => $site_host,
+                    cur_date  => $cur_date,
+                },
+            );
+            push @{$a_map}, $map_item;
+        }
 
         my $mod_id    = $h->{mod_id};
         my $page_type = 'Standard';
