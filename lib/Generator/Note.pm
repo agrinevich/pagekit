@@ -89,6 +89,7 @@ sub gen {
             lang_metatags => $args{lang_metatags},
             'd_navi'      => $args{d_navi},
             'm_navi'      => $args{m_navi},
+            breadcrumbs   => $args{breadcrumbs},
             page_id       => $page_id,
             lang_id       => $lang_id,
             page_path     => $page_path,
@@ -129,6 +130,7 @@ sub _gen_list {
         lang_links    => $args{lang_links},
         desktop_navi  => $args{d_navi},
         mobile_navi   => $args{m_navi},
+        breadcrumbs   => $args{breadcrumbs},
     );
 
     my $p_suffix = $p > 0 ? sprintf( '%d', $p + 1 ) : q{};
@@ -149,6 +151,7 @@ sub _gen_list {
         lang_metatags => $args{lang_metatags},
         'd_navi'      => $args{d_navi},
         'm_navi'      => $args{m_navi},
+        breadcrumbs   => $args{breadcrumbs},
         p             => $p,
         p_qty         => $p_qty,
         npp           => $npp,
@@ -230,6 +233,7 @@ sub _build_list_main {
             lang_links    => $args{lang_links},
             desktop_navi  => $args{d_navi},
             mobile_navi   => $args{m_navi},
+            breadcrumbs   => $args{breadcrumbs},
         },
     );
 

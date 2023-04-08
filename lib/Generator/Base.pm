@@ -124,6 +124,14 @@ sub go_tree {
             langs     => $h_langs,
         );
 
+        my $breadcrumbs = $self->_breadcrumbs(
+            page_id   => $id,
+            lang_id   => $lang_id,
+            lang_path => $lang_path,
+            root_dir  => $root_dir,
+            tpl_path  => $tpl_path,
+        );
+
         my $map_item = Generator::Renderer::parse_html(
             root_dir => $root_dir,
             tpl_path => $tpl_path,
@@ -158,6 +166,7 @@ sub go_tree {
             lang_metatags => $meta_tags,
             'd_navi'      => $d_navi,
             'm_navi'      => $m_navi,
+            breadcrumbs   => $breadcrumbs,
         );
 
         $self->go_tree(
@@ -174,6 +183,102 @@ sub go_tree {
             mods      => $h_mods,
             a_map     => $a_map,
             cur_date  => $cur_date,
+        );
+    }
+
+    return;
+}
+
+sub _breadcrumbs {
+    my ( $self, %args ) = @_;
+
+    my $page_id   = $args{page_id}   // 0;
+    my $lang_id   = $args{lang_id}   // 0;
+    my $lang_path = $args{lang_path} // q{};
+    my $root_dir  = $args{root_dir}  // q{};
+    my $tpl_path  = $args{tpl_path}  // q{};
+
+    if ( !$page_id || !$lang_id ) {
+        return q{};
+    }
+
+    my $breadcrumbs = q{};
+
+    my $a_chain = [];
+    $self->_bread_chain(
+        {
+            lang_id => $lang_id,
+            page_id => $page_id,
+        },
+        $a_chain
+    );
+
+    my $h0 = shift @{$a_chain};
+    $breadcrumbs .= Generator::Renderer::parse_html(
+        root_dir => $root_dir,
+        tpl_path => $tpl_path,
+        tpl_name => 'bread-home.html',
+        h_vars   => {
+            path => $lang_path . $h0->{path},
+            name => $h0->{name},
+        },
+    );
+
+    foreach my $h ( @{$a_chain} ) {
+        $breadcrumbs .= Generator::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => 'bread-item.html',
+            h_vars   => {
+                path => $lang_path . $h->{path},
+                name => $h->{name},
+            },
+        );
+    }
+
+    return $breadcrumbs;
+}
+
+sub _bread_chain {
+    my ( $self, $h_args, $a_chain ) = @_;
+
+    my $lang_id = $h_args->{lang_id};
+    my $page_id = $h_args->{page_id};
+
+    my ( $h_page, $err_str1 ) = $self->app->ctl->sh->one( 'page', $page_id );
+
+    my $page_name;
+    my ( $h_marks, $err_str2 ) = $self->app->ctl->sh->list(
+        'pagemark', {
+            page_id => $page_id,
+            lang_id => $lang_id,
+            name    => 'page_name',
+        },
+    );
+    my @mark_ids = keys %{$h_marks};
+    if ( scalar @mark_ids ) {
+        my $mark_id = $mark_ids[0];
+        $page_name = $h_marks->{$mark_id}->{value};
+    }
+    else {
+        $page_name = $h_page->{nick};
+    }
+
+    unshift @{$a_chain}, {
+        id        => $page_id,
+        parent_id => $h_page->{parent_id},
+        nick      => $h_page->{nick},
+        path      => $h_page->{path},
+        name      => $page_name,
+    };
+
+    if ( $h_page->{parent_id} > 0 ) {
+        $self->_bread_chain(
+            {
+                lang_id => $lang_id,
+                page_id => $h_page->{parent_id},
+            },
+            $a_chain
         );
     }
 
