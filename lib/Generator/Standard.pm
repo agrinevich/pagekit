@@ -34,6 +34,7 @@ sub gen {
     $marks{mobile_navi}   = $args{m_navi};
     $marks{lang_links}    = $args{lang_links};
     $marks{lang_metatags} = $args{lang_metatags};
+    $marks{breadcrumbs}   = $args{breadcrumbs};
 
     my ( $h_pagemarks, $err_str ) = $sh->list(
         'pagemark', {
