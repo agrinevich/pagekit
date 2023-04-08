@@ -213,13 +213,14 @@ sub _breadcrumbs {
         $a_chain
     );
 
-    my $h0 = shift @{$a_chain};
+    my $h0        = shift @{$a_chain};
+    my $home_path = $lang_path . $h0->{path} || q{/};
     $breadcrumbs .= Generator::Renderer::parse_html(
         root_dir => $root_dir,
         tpl_path => $tpl_path,
         tpl_name => 'bread-home.html',
         h_vars   => {
-            path => $lang_path . $h0->{path},
+            path => $home_path,
             name => $h0->{name},
         },
     );
