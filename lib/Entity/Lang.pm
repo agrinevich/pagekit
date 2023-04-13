@@ -178,25 +178,46 @@ sub del {
         };
     }
 
-    # TODO: delete all note versions and files/dirs
-    # TODO: delete all page versions files/dirs
+    # delete lang directory
+    my ( $h_lang, $err_str1 ) = $self->ctl->sh->one( 'lang', $self->id );
+    if ($err_str1) {
+        return {
+            err => $err_str1,
+        };
+    }
+    if ( !$h_lang->{nick} ) {
+        return {
+            err => 'lang nick must be not empty',
+        };
+    }
 
-    # delete all dependent pagemarks first
-    # my $err_str2 = $self->ctl->sh->del( 'pagemark', { lang_id => $self->id } );
-    # if ($err_str2) {
-    #     return {
-    #         err => $err_str2,
-    #     };
-    # }
+    my $app       = $self->ctl->sh->app;
+    my $lang_path = $app->config->{path}->{html} . q{/} . $h_lang->{nick};
+    $self->ctl->gh->empty_dir( path => $lang_path );
 
-    # my $err_str = $self->ctl->sh->del( 'lang', { id => $self->id } );
-    # if ($err_str) {
-    #     return {
-    #         err => $err_str,
-    #     };
-    # }
+    # delete pagemarks for lang_id
+    my $err_str2 = $self->ctl->sh->del( 'pagemark', { lang_id => $self->id } );
+    if ($err_str2) {
+        return {
+            err => $err_str2,
+        };
+    }
 
-    my $app = $self->ctl->sh->app;
+    # delete note_versions for lang_id
+    my $err_str3 = $self->ctl->sh->del( 'note_version', { lang_id => $self->id } );
+    if ($err_str3) {
+        return {
+            err => $err_str3,
+        };
+    }
+
+    my $err_str = $self->ctl->sh->del( 'lang', { id => $self->id } );
+    if ($err_str) {
+        return {
+            err => $err_str,
+        };
+    }
+
     my $url = $app->config->{site}->{host} . q{/admin/lang?do=list};
 
     return {
