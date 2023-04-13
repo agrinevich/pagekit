@@ -1,0 +1,31 @@
+#
+# /etc/nginx/conf.d/website.com.conf
+#
+
+# Expires map
+map $sent_http_content_type $expires {
+    default                    off;
+    text/html                  epoch;
+    text/css                   max;
+    application/javascript     max;
+    ~image/                    max;
+    ~font/                     max;
+}
+
+server {
+  server_name WEBSITE.COM WWW.WEBSITE.COM;
+  listen 80;
+  expires $expires;
+#  ssi on;
+#  error_page 404 /404;
+
+  location /admin {
+    proxy_pass http://127.0.0.1:5011;
+  }
+
+  location / {
+    root /var/www/WEBSITE.COM/html;
+    index index.html;
+  }
+}
+
