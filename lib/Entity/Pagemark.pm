@@ -131,24 +131,23 @@ sub add {
         };
     }
 
-    my ( $id, $err_str2 ) = $self->ctl->sh->add(
-        'pagemark', {
-            page_id => $self->page_id,
-            lang_id => $self->lang_id,
-            name    => $self->name,
-            value   => $self->value,
-        },
-    );
-    if ($err_str2) {
-        return {
-            err => 'failed to add pagemark: ' . $err_str2,
-        };
+    # copy mark for all langs
+    my ( $h_langs, $err_str4 ) = $self->ctl->sh->list('lang');
+    foreach my $lang_id ( keys %{$h_langs} ) {
+        my ( $id, $err_str2 ) = $self->ctl->sh->add(
+            'pagemark', {
+                page_id => $self->page_id,
+                lang_id => $lang_id,
+                name    => $self->name,
+                value   => $self->value,
+            },
+        );
+        if ($err_str2) {
+            return {
+                err => 'failed to add pagemark: ' . $err_str2,
+            };
+        }
     }
-    $self->id($id);
-
-    #
-    # TODO: copy mark for all langs
-    #
 
     my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . '/admin/pagemark?do=list';
