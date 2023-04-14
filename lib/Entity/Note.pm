@@ -254,22 +254,31 @@ sub upd {
         };
     }
 
-    # TODO: clear nick
-    # TODO: clear prio
-    # TODO: clear price
+    my $nick = $self->nick;
+    $nick =~ s/\W//g;
+    if ( $nick !~ /\w/ ) {
+        $nick = $self->id;
+    }
 
-    if ( !$self->nick ) {
-        return {
-            err => 'nick is required',
-        };
+    my $prio = $self->prio;
+    $prio =~ s/\D//g;
+    if ( $prio !~ /\d/ ) {
+        $prio = 0;
+    }
+
+    my $price = $self->price;
+    $price =~ s/[,]/[.]/g;
+    $price =~ s/[^\d.]//g;
+    if ( $price !~ /[\d.]/ ) {
+        $price = 0;
     }
 
     my $err_str = $self->ctl->sh->upd(
         'note', {
             id    => $self->id,
-            nick  => $self->nick,
-            prio  => $self->prio,
-            price => $self->price,
+            nick  => $nick,
+            prio  => $prio,
+            price => $price,
         },
     );
     if ($err_str) {
