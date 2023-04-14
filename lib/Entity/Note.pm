@@ -219,22 +219,24 @@ sub add {
         };
     }
 
-    my ( $nv_id, $err_str3 ) = $self->ctl->sh->add(
-        'note_version', {
-            note_id => $self->id,
-            lang_id => 1,
-            name    => $self->name,
-        },
-    );
-    if ($err_str3) {
-        return {
-            err => 'failed to add note_version: ' . $err_str3,
-        };
-    }
+    # copy note_version for all langs
+    my ( $h_langs, $err_str4 ) = $self->ctl->sh->list('lang');
+    foreach my $lang_id ( keys %{$h_langs} ) {
+        # my $h = $h_langs->{$lang_id};
 
-    #
-    # TODO: copy note_version for all langs
-    #
+        my ( $nv_id, $err_str3 ) = $self->ctl->sh->add(
+            'note_version', {
+                note_id => $self->id,
+                lang_id => $lang_id,
+                name    => $self->name,
+            },
+        );
+        if ($err_str3) {
+            return {
+                err => 'failed to add note_version: ' . $err_str3,
+            };
+        }
+    }
 
     my $app = $self->ctl->sh->app;
     my $url = $app->config->{site}->{host} . '/admin/note?do=list';
