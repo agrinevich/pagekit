@@ -1,4 +1,3 @@
-# TODO: rename to Filemanager
 package Entity::File;
 
 use Carp qw(carp croak);
@@ -115,13 +114,20 @@ sub backups {
         files_only => 1,
     );
 
-    #
-    # TODO: sort by file name
-    #
+    # sort by file name
+    my %bkps;
+    foreach my $h_file ( @{$a_bkps} ) {
+        my $name = $h_file->{name};
+        $bkps{$name} = $h_file;
+    }
+    my @bkps;
+    foreach my $name ( sort keys %bkps ) {
+        push @bkps, $bkps{$name};
+    }
 
     return {
         action => 'backups',
-        data   => $a_bkps,
+        data   => [@bkps],
     };
 }
 

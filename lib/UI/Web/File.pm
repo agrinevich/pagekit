@@ -147,7 +147,7 @@ sub _bkp_list {
     my $result   = q{};
     my $tpl_item = q{};
 
-    foreach my $h_bkp ( sort @{$a_bkps} ) {
+    foreach my $h_bkp ( @{$a_bkps} ) {
         $result .= UI::Web::Renderer::parse_html(
             root_dir => $root_dir,
             tpl_path => $tpl_path,
