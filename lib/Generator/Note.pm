@@ -12,8 +12,6 @@ use Carp qw(croak carp);
 use POSIX qw( strftime );
 
 use App::Files;
-use Generator::Renderer;
-use Generator::Base;
 
 our $VERSION = '0.2';
 
@@ -138,6 +136,7 @@ sub _gen_list {
 
     $marks{page_main} = _build_list_main(
         sh            => $sh,
+        gh            => $gh,
         o_mod_config  => $o_mod_config,
         root_dir      => $root_dir,
         html_path     => $html_path,
@@ -162,10 +161,9 @@ sub _gen_list {
     my $suffix   = $p > 0 ? $p : q{};
     my $out_file = $out_dir . '/index' . $suffix . '.html';
 
-    Generator::Renderer::write_html(
+    $gh->write_html(
         \%marks,
         {
-            root_dir => $root_dir,
             tpl_path => $tpl_path,
             tpl_file => 'layout.html',
             out_file => $out_file,
@@ -179,6 +177,7 @@ sub _build_list_main {
     my (%args) = @_;
 
     my $sh           = $args{sh};
+    my $gh           = $args{gh};
     my $o_mod_config = $args{o_mod_config};
     my $h_pagemarks  = $args{pagemarks};
 
@@ -217,6 +216,7 @@ sub _build_list_main {
 
     my $list = _build_list_items(
         sh            => $sh,
+        gh            => $gh,
         root_dir      => $root_dir,
         html_path     => $html_path,
         tpl_path      => $tpl_path,
@@ -238,6 +238,7 @@ sub _build_list_main {
     );
 
     my $paging = _build_list_paging(
+        gh       => $gh,
         root_dir => $root_dir,
         tpl_path => $skin_tpl_path,
         qty      => $total_qty,
@@ -246,8 +247,7 @@ sub _build_list_main {
         path     => '/admin/note?do=list&fltr_page_id=' . $page_id . '&p=',
     );
 
-    my $page_main = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $page_main = $gh->render(
         tpl_path => $skin_tpl_path,
         tpl_name => 'f-list.html',
         h_vars   => {
@@ -266,6 +266,7 @@ sub _build_list_items {
     my (%args) = @_;
 
     my $sh          = $args{sh};
+    my $gh          = $args{gh};
     my $h_pagemarks = $args{pagemarks};
 
     my $root_dir      = $args{root_dir}      // q{};
@@ -312,15 +313,14 @@ sub _build_list_items {
         }
         $h->{img_path_sm} = $h_ni_1->{path_sm};
 
-        my $one_path = Generator::Base->get_note_path(
+        my $one_path = $gh->get_note_path(
             lang_path => $h_vars->{lang_path},
             page_path => $h_vars->{page_path},
             id        => $id,
         );
         $h->{path} = $one_path;
 
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $gh->render(
             tpl_path => $skin_tpl_path,
             tpl_name => $tpl_item,
             h_vars   => {
@@ -330,6 +330,7 @@ sub _build_list_items {
         );
 
         _gen_one(
+            gh            => $gh,
             root_dir      => $root_dir,
             html_path     => $html_path,
             tpl_path      => $tpl_path,
@@ -350,6 +351,7 @@ sub _build_list_items {
 sub _build_list_paging {
     my (%args) = @_;
 
+    my $gh       = $args{gh};
     my $root_dir = $args{root_dir};
     my $tpl_path = $args{tpl_path};
     my $qty      = $args{qty};
@@ -372,8 +374,7 @@ sub _build_list_paging {
 
         $suffix = $p ? $p : q{};
 
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $gh->render(
             tpl_path => $tpl_path,
             tpl_name => $tpl_name,
             h_vars   => {
@@ -391,6 +392,8 @@ sub _build_list_paging {
 sub _gen_one {
     my (%args) = @_;
 
+    my $gh = $args{gh};
+
     my $root_dir      = $args{root_dir}      // q{};
     my $html_path     = $args{html_path}     // q{};
     my $tpl_path      = $args{tpl_path}      // q{};
@@ -407,6 +410,7 @@ sub _gen_one {
     $h_vars->{page_descr} = $h_vars->{p_descr};
 
     $h_vars->{page_main} = _build_one_main(
+        gh            => $gh,
         root_dir      => $root_dir,
         html_path     => $html_path,
         tpl_path      => $tpl_path,
@@ -417,10 +421,9 @@ sub _gen_one {
 
     my $out_file = $root_dir . $html_path . $one_path;
 
-    Generator::Renderer::write_html(
+    $gh->write_html(
         $h_vars,
         {
-            root_dir => $root_dir,
             tpl_path => $tpl_path,
             tpl_file => 'layout.html',
             out_file => $out_file,
@@ -433,6 +436,7 @@ sub _gen_one {
 sub _build_one_main {
     my (%args) = @_;
 
+    my $gh     = $args{gh};
     my $h_vars = $args{h_vars};
     my $h_nis  = $args{h_nis};
 
@@ -450,8 +454,7 @@ sub _build_one_main {
     foreach my $ni_id ( sort keys %{$h_nis} ) {
         my $h_ni = $h_nis->{$ni_id};
 
-        $img_list_la .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $img_list_la .= $gh->render(
             tpl_path => $skin_tpl_path,
             tpl_name => 'f-one-img-la.html',
             h_vars   => {
@@ -464,8 +467,7 @@ sub _build_one_main {
     }
     $h_vars->{img_list_la} = $img_list_la;
 
-    my $page_main = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $page_main = $gh->render(
         tpl_path => $skin_tpl_path,
         tpl_name => 'f-one.html',
         h_vars   => $h_vars,

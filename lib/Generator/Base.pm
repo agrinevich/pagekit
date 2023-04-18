@@ -4,8 +4,10 @@ use Carp qw(carp croak);
 use English qw( -no_match_vars );
 use POSIX ();
 use POSIX qw(strftime);
+use Path::Tiny; # path, spew_utf8
+use Text::Xslate qw(mark_raw html_escape);
+# use Data::Dumper;
 
-use Generator::Renderer;
 use Generator::Standard;
 use Generator::Note;
 use App::Files;
@@ -20,6 +22,108 @@ has 'app' => (
     is       => 'ro',
     required => 1,
 );
+
+has 'snippets' => (
+    is => 'rw',
+);
+
+# pre-cache html snippets
+sub BUILD {
+    my ( $self, $h_args ) = @_;
+
+    my $app          = $h_args->{app};
+    my $root_dir     = $self->app->root_dir;
+    my $snippet_path = $self->app->config->{path}->{templates} . '/g/snippet';
+
+    my $h_snippets = _get_snippets( dir => $root_dir . $snippet_path );
+
+    $self->snippets($h_snippets);
+
+    return;
+}
+
+sub _get_snippets {
+    my (%args) = @_;
+
+    my $dir = $args{dir};
+
+    my $a_files = App::Files::get_files(
+        dir        => $dir,
+        files_only => 1,
+    );
+
+    my %result = ();
+
+    foreach my $h_file ( @{$a_files} ) {
+        my $fname = $h_file->{name};
+        my $fbody = App::Files::read_file( file => $dir . q{/} . $fname );
+        my ( $basename, $fext ) = split /[.]/, $fname;
+        $result{$basename} = $fbody;
+    }
+
+    return \%result;
+}
+
+sub render {
+    my ( $self, %args ) = @_;
+
+    my $tpl_path = $args{tpl_path};
+    my $tpl_name = $args{tpl_name};
+    my $h_vars   = $args{h_vars};
+
+    my $root_dir = $self->app->root_dir;
+
+    my $h_global = $self->snippets();
+
+    my %merged = ();
+    if ( scalar keys %{$h_global} ) {
+        %merged = %{$h_global};
+
+        # override it if you have another mark value for current page
+        while ( my ( $k, $v ) = each( %{$h_vars} ) ) {
+            $merged{$k} = $v;
+        }
+    }
+    else {
+        %merged = %{$h_vars};
+    }
+
+    foreach my $k ( keys %merged ) {
+        $merged{$k} = mark_raw( $merged{$k} );
+    }
+
+    my $tx = Text::Xslate->new(
+        path        => [ $root_dir . $tpl_path ],
+        syntax      => 'TTerse',
+        input_layer => ':utf8',
+        cache       => 0,
+    );
+
+    return $tx->render( $tpl_name, \%merged ) || croak __PACKAGE__ . ' failed to render template';
+}
+
+sub write_html {
+    my ( $self, $h_vars, $h_args ) = @_;
+
+    my $tpl_path = $h_args->{tpl_path};
+    my $tpl_file = $h_args->{tpl_file};
+    my $out_file = $h_args->{out_file};
+
+    my $html = $self->render(
+        tpl_path => $tpl_path,
+        tpl_name => $tpl_file,
+        h_vars   => $h_vars,
+    );
+
+    path($out_file)->spew_utf8($html);
+
+    return;
+}
+
+sub do_escape {
+    my ( $self, $str ) = @_;
+    return html_escape($str);
+}
 
 sub gen_pages {
     my ($self) = @_;
@@ -60,12 +164,11 @@ sub gen_pages {
 
     my $map_items = join q{}, @{$a_map};
     my $map_file  = $root_dir . $html_path . '/sitemap.xml';
-    Generator::Renderer::write_html(
+    $self->write_html(
         {
             items => $map_items,
         },
         {
-            root_dir => $root_dir,
             tpl_path => $tpl_path,
             tpl_file => 'sitemap.xml',
             out_file => $map_file,
@@ -133,8 +236,7 @@ sub go_tree {
         );
 
         if ( !$h->{hidden} ) {
-            my $map_item = Generator::Renderer::parse_html(
-                root_dir => $root_dir,
+            my $map_item = $self->render(
                 tpl_path => $tpl_path,
                 tpl_name => "sitemap-item.xml",
                 h_vars   => {
@@ -217,8 +319,7 @@ sub _breadcrumbs {
 
     my $h0        = shift @{$a_chain};
     my $home_path = $lang_path . $h0->{path} || q{/};
-    $breadcrumbs .= Generator::Renderer::parse_html(
-        root_dir => $root_dir,
+    $breadcrumbs .= $self->render(
         tpl_path => $tpl_path,
         tpl_name => 'bread-home.html',
         h_vars   => {
@@ -228,8 +329,7 @@ sub _breadcrumbs {
     );
 
     foreach my $h ( @{$a_chain} ) {
-        $breadcrumbs .= Generator::Renderer::parse_html(
-            root_dir => $root_dir,
+        $breadcrumbs .= $self->render(
             tpl_path => $tpl_path,
             tpl_name => 'bread-item.html',
             h_vars   => {
@@ -347,8 +447,7 @@ sub _navi_links {
             );
         }
 
-        $d_links .= Generator::Renderer::parse_html(
-            root_dir => $root_dir,
+        $d_links .= $self->render(
             tpl_path => $tpl_path,
             tpl_name => "dnavi-item$suffix.html",
             h_vars   => {
@@ -358,8 +457,7 @@ sub _navi_links {
             },
         );
 
-        $m_links .= Generator::Renderer::parse_html(
-            root_dir => $root_dir,
+        $m_links .= $self->render(
             tpl_path => $tpl_path,
             tpl_name => "mnavi-item$suffix.html",
             h_vars   => {
@@ -408,8 +506,7 @@ sub _child_links {
 
         my $page_path = $h->{path};
 
-        $d_links .= Generator::Renderer::parse_html(
-            root_dir => $root_dir,
+        $d_links .= $self->render(
             tpl_path => $tpl_path,
             tpl_name => "dnavi-child.html",
             h_vars   => {
@@ -418,8 +515,7 @@ sub _child_links {
             },
         );
 
-        $m_links .= Generator::Renderer::parse_html(
-            root_dir => $root_dir,
+        $m_links .= $self->render(
             tpl_path => $tpl_path,
             tpl_name => "mnavi-child.html",
             h_vars   => {
@@ -447,8 +543,7 @@ sub _lang_links {
     my $lang_links = q{};
 
     # canonical
-    $meta_tags .= Generator::Renderer::parse_html(
-        root_dir => $root_dir,
+    $meta_tags .= $self->render(
         tpl_path => $tpl_path,
         tpl_name => "lang-metatag-c.html",
         h_vars   => {
@@ -463,8 +558,7 @@ sub _lang_links {
         my $lang_path = $h->{nick} ? q{/} . $h->{nick} : q{};
         my $link_path = $lang_path . $page_path;
 
-        $lang_links .= Generator::Renderer::parse_html(
-            root_dir => $root_dir,
+        $lang_links .= $self->render(
             tpl_path => $tpl_path,
             tpl_name => "lang-link.html",
             h_vars   => {
@@ -474,8 +568,7 @@ sub _lang_links {
             },
         );
 
-        $meta_tags .= Generator::Renderer::parse_html(
-            root_dir => $root_dir,
+        $meta_tags .= $self->render(
             tpl_path => $tpl_path,
             tpl_name => "lang-metatag.html",
             h_vars   => {

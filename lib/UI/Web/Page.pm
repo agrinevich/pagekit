@@ -3,8 +3,6 @@ package UI::Web::Page;
 use Const::Fast;
 use Carp qw(carp croak);
 
-use UI::Web::Renderer;
-
 use Moo;
 use namespace::clean;
 
@@ -44,8 +42,7 @@ sub list {
         level     => 0,
     );
 
-    my $html_body = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $html_body = $self->app->ctl->gh->render(
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         tpl_name => 'list.html',
         h_vars   => {
@@ -55,8 +52,7 @@ sub list {
         },
     );
 
-    my $res = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $res = $self->app->ctl->gh->render(
         tpl_path => $tpl_path,
         tpl_name => 'layout.html',
         h_vars   => {
@@ -102,7 +98,7 @@ sub one {
         id_sel    => $h_page->{parent_id},
     );
 
-    my $mod_options = _build_list2(
+    my $mod_options = $self->_build_list2(
         root_dir => $root_dir,
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         tpl_item => 'mod-option.html',
@@ -110,8 +106,7 @@ sub one {
         id_sel   => $h_page->{mod_id},
     );
 
-    my $html_body = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $html_body = $self->app->ctl->gh->render(
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         tpl_name => 'edit.html',
         h_vars   => {
@@ -122,8 +117,7 @@ sub one {
         },
     );
 
-    my $res = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $res = $self->app->ctl->gh->render(
         tpl_path => $tpl_path,
         tpl_name => 'layout.html',
         h_vars   => {
@@ -169,8 +163,7 @@ sub _build_list {
         my $mod_link = q{};
         if ( $h->{mod_id} ) {
             my ( $h_mod, $err_str ) = $self->app->ctl->sh->one( 'mod', $h->{mod_id} );
-            $mod_link = UI::Web::Renderer::parse_html(
-                root_dir => $root_dir,
+            $mod_link = $self->app->ctl->gh->render(
                 tpl_path => $tpl_path,
                 tpl_name => 'mod-link.html',
                 h_vars   => {
@@ -184,8 +177,7 @@ sub _build_list {
         $h->{attr} = $attr{$id};
         $h->{dash} = $dash;
 
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $self->app->ctl->gh->render(
             tpl_path => $tpl_path,
             tpl_name => $tpl_item,
             h_vars   => $h,
@@ -206,9 +198,8 @@ sub _build_list {
 }
 
 sub _build_list2 {
-    my (%args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $root_dir = $args{root_dir} // q{};
     my $tpl_path = $args{tpl_path} // q{};
     my $tpl_item = $args{tpl_item} // q{};
     my $h_table  = $args{a_items}  // {};
@@ -222,8 +213,7 @@ sub _build_list2 {
 
         $h->{attr} = $attr{$id};
 
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $self->app->ctl->gh->render(
             tpl_path => $tpl_path,
             tpl_name => $tpl_item,
             h_vars   => $h,
@@ -236,15 +226,13 @@ sub _build_list2 {
 # sub _build_msg {
 #     my (%args) = @_;
 
-#     my $root_dir = $args{root_dir};
 #     my $tpl_path = $args{tpl_path};
 #     my $tpl_name = $args{tpl_name};
 #     my $msg      = $args{msg};
 
 #     return q{} if !$msg;
 
-#     my $html = parse_html(
-#         root_dir => $root_dir,
+#     my $html = $self->app->ctl->gh->render(
 #         tpl_path => $tpl_path,
 #         tpl_name => $tpl_name,
 #         h_vars   => {

@@ -4,8 +4,6 @@ use Const::Fast;
 use Carp qw(carp croak);
 use POSIX qw( strftime );
 
-use UI::Web::Renderer;
-
 use Moo;
 use namespace::clean;
 
@@ -42,9 +40,8 @@ sub list {
         tpl_path => $tpl_path,
     );
 
-    my $config_html = _build_config_html(
+    my $config_html = $self->_build_config_html(
         mod_name  => $_ENTITY,
-        root_dir  => $root_dir,
         tpl_path  => $skin_tpl_path,
         html_path => $html_path,
         o_config  => $o_mod_config,
@@ -69,8 +66,7 @@ sub list {
         },
     );
 
-    my $paging = _build_paging(
-        root_dir => $root_dir,
+    my $paging = $self->_build_paging(
         tpl_path => $skin_tpl_path,
         qty      => $total_qty,
         npp      => $npp,
@@ -78,8 +74,7 @@ sub list {
         path     => '/admin/note?do=list&fltr_page_id=' . $page_id . '&p=',
     );
 
-    my $html_body = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $html_body = $self->app->ctl->gh->render(
         tpl_path => $skin_tpl_path,
         tpl_name => 'a-list.html',
         h_vars   => {
@@ -92,8 +87,7 @@ sub list {
         },
     );
 
-    my $res = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $res = $self->app->ctl->gh->render(
         tpl_path => $tpl_path,
         tpl_name => 'layout.html',
         h_vars   => {
@@ -138,8 +132,7 @@ sub _build_list {
         }
         $h->{name} = $name;
 
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $self->app->ctl->gh->render(
             tpl_path => $tpl_path,
             tpl_name => $tpl_item,
             h_vars   => {
@@ -153,9 +146,8 @@ sub _build_list {
 }
 
 sub _build_paging {
-    my (%args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $root_dir = $args{root_dir};
     my $tpl_path = $args{tpl_path};
     my $qty      = $args{qty};
     my $npp      = $args{npp};
@@ -174,8 +166,7 @@ sub _build_paging {
 
         $suffix = $p ? $p : q{};
 
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $self->app->ctl->gh->render(
             tpl_path => $tpl_path,
             tpl_name => $tpl_name,
             h_vars   => {
@@ -191,9 +182,8 @@ sub _build_paging {
 }
 
 sub _build_config_html {
-    my (%args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $root_dir  = $args{root_dir};
     my $tpl_path  = $args{tpl_path};
     my $html_path = $args{html_path};
     my $o_config  = $args{o_config};
@@ -202,8 +192,7 @@ sub _build_config_html {
     my $result = q{};
 
     foreach my $param_name ( sort keys %{ $o_config->{$mod_name} } ) {
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $self->app->ctl->gh->render(
             tpl_path => $tpl_path,
             tpl_name => 'a-config-item.html',
             h_vars   => {
@@ -292,8 +281,7 @@ sub one {
     foreach my $id ( sort keys %{$h_images} ) {
         my $h = $h_images->{$id};
 
-        $images .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $images .= $self->app->ctl->gh->render(
             tpl_path => $skin_tpl_path,
             tpl_name => 'a-img-item.html',
             h_vars   => $h,
@@ -310,8 +298,7 @@ sub one {
         my ( $h_lang, $err_str2 ) = $self->app->ctl->sh->one( 'lang', $h->{lang_id} );
         $h->{lang_isocode} = $h_lang->{isocode};
 
-        $versions .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $versions .= $self->app->ctl->gh->render(
             tpl_path => $skin_tpl_path,
             tpl_name => 'a-version-item.html',
             h_vars   => $h,
@@ -323,16 +310,14 @@ sub one {
     foreach my $id ( sort keys %{$h_langs} ) {
         my $h = $h_langs->{$id};
 
-        $lang_options .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $lang_options .= $self->app->ctl->gh->render(
             tpl_path => $skin_tpl_path,
             tpl_name => 'a-lang-option.html',
             h_vars   => $h,
         );
     }
 
-    my $html_body = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $html_body = $self->app->ctl->gh->render(
         tpl_path => $skin_tpl_path,
         tpl_name => 'a-edit.html',
         h_vars   => {
@@ -343,8 +328,7 @@ sub one {
         },
     );
 
-    my $res = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $res = $self->app->ctl->gh->render(
         tpl_path => $tpl_path,
         tpl_name => 'layout.html',
         h_vars   => {

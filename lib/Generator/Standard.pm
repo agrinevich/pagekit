@@ -10,7 +10,6 @@ use warnings;
 use Carp qw(croak carp);
 
 use App::Files;
-use Generator::Renderer;
 
 our $VERSION = '0.2';
 
@@ -18,6 +17,7 @@ sub gen {
     my ( undef, %args ) = @_;
 
     my $sh = $args{sh};
+    my $gh = $args{gh};
 
     my $root_dir  = $args{root_dir}  // q{};
     my $tpl_path  = $args{tpl_path}  // q{};
@@ -56,10 +56,9 @@ sub gen {
     }
     my $out_file = $out_dir . '/index.html';
 
-    Generator::Renderer::write_html(
+    $gh->write_html(
         \%marks,
         {
-            root_dir => $root_dir,
             tpl_path => $tpl_path,
             tpl_file => 'layout.html',
             out_file => $out_file,
