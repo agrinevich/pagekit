@@ -3,7 +3,7 @@ package UI::Web::Renderer;
 use strict;
 use warnings;
 
-use Const::Fast;
+# use Const::Fast;
 use Carp qw(croak carp);
 use Path::Tiny; # path, spew_utf8
 use Text::Xslate qw(mark_raw html_escape);
@@ -13,7 +13,6 @@ use App::Files;
 
 our $VERSION = '0.2';
 
-# const my $ROUND_NUMBER => 0.999999;
 # const my %MSG_TEXT     => (
 #     success => 'Success',
 #     error   => 'Error',
@@ -27,8 +26,7 @@ sub parse_html {
     my $tpl_name = $args{tpl_name};
     my $h_vars   = $args{h_vars};
 
-    # gmarks are global marks with 'default' values
-    my $h_gmarks = _gmarks( dir => $root_dir . $tpl_path . '/global' );
+    my $h_gmarks = _global( dir => $root_dir . $tpl_path . '/snippet' );
 
     my %merged = ();
     if ( scalar keys %{$h_gmarks} ) {
@@ -57,7 +55,7 @@ sub parse_html {
     return $tx->render( $tpl_name, \%merged ) || croak __PACKAGE__ . ' failed to parse_html';
 }
 
-sub _gmarks {
+sub _global {
     my (%args) = @_;
 
     my $dir = $args{dir};

@@ -1,6 +1,5 @@
 package UI::Web::File;
 
-use Const::Fast;
 use Carp qw(carp croak);
 
 use UI::Web::Renderer;
@@ -15,7 +14,68 @@ has 'app' => (
     required => 1,
 );
 
-const my $_ENTITY => 'file';
+sub snippets {
+    my ( $self, %args ) = @_;
+
+    my $h_data = $args{data};
+
+    my $a_files = $h_data->{a_files};
+
+    my $root_dir = $self->app->root_dir;
+    my $tpl_path = $self->app->config->{path}->{templates};
+
+    my $list = _snippet_list(
+        root_dir => $root_dir,
+        tpl_path => $tpl_path . '/file',
+        a_items  => $a_files,
+    );
+
+    my $html_body = UI::Web::Renderer::parse_html(
+        root_dir => $root_dir,
+        tpl_path => $tpl_path . '/file',
+        tpl_name => 'snippets.html',
+        h_vars   => {
+            list => $list,
+        },
+    );
+
+    my $res = UI::Web::Renderer::parse_html(
+        root_dir => $root_dir,
+        tpl_path => $tpl_path,
+        tpl_name => 'layout.html',
+        h_vars   => {
+            body_html => $html_body,
+        },
+    );
+
+    return {
+        body => $res,
+    };
+}
+
+sub _snippet_list {
+    my (%args) = @_;
+
+    my $root_dir = $args{root_dir} // q{};
+    my $tpl_path = $args{tpl_path} // q{};
+    my $a_files  = $args{a_items}  // {};
+
+    my $result = q{};
+
+    foreach my $h_file ( @{$a_files} ) {
+        $result .= UI::Web::Renderer::parse_html(
+            root_dir => $root_dir,
+            tpl_path => $tpl_path,
+            tpl_name => 'snippets-item.html',
+            h_vars   => {
+                name => $h_file->{name},
+            },
+        );
+
+    }
+
+    return $result;
+}
 
 sub templates {
     my ( $self, %args ) = @_;
@@ -33,13 +93,13 @@ sub templates {
 
     my $list = _tpl_list(
         root_dir => $root_dir,
-        tpl_path => $tpl_path . q{/} . $_ENTITY,
+        tpl_path => $tpl_path . '/file',
         a_items  => $h_files,
     );
 
     my $html_body = UI::Web::Renderer::parse_html(
         root_dir => $root_dir,
-        tpl_path => $tpl_path . q{/} . $_ENTITY,
+        tpl_path => $tpl_path . '/file',
         tpl_name => 'templates.html',
         h_vars   => {
             list   => $list,
@@ -110,13 +170,13 @@ sub backups {
 
     my $list = _bkp_list(
         root_dir => $root_dir,
-        tpl_path => $tpl_path . q{/} . $_ENTITY,
+        tpl_path => $tpl_path . '/file',
         a_items  => $a_bkps,
     );
 
     my $html_body = UI::Web::Renderer::parse_html(
         root_dir => $root_dir,
-        tpl_path => $tpl_path . q{/} . $_ENTITY,
+        tpl_path => $tpl_path . '/file',
         tpl_name => 'backups.html',
         h_vars   => {
             list => $list,
