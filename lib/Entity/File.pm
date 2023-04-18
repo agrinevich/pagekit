@@ -24,16 +24,75 @@ has 'size' => (
     default => undef,
 );
 
-#
-# TODO: create a way to add more 'global' templates via WebUI (upload or form adding)
-#
+sub snippets {
+    my ( $self, $params ) = @_;
+
+    my $app  = $self->ctl->uih->app;
+    my $path = $app->config->{path}->{templates} . '/g/snippet';
+
+    my $a_files = $self->ctl->gh->get_files(
+        path       => $path,
+        files_only => 1,
+    );
+
+    my $h_data = {
+        a_files => $a_files,
+    };
+
+    return {
+        action => 'snippets',
+        data   => $h_data,
+    };
+}
+
+sub snippetadd {
+    my ( $self, $params ) = @_;
+
+    my $f_name = $params->{name} . '.html';
+    my $app    = $self->ctl->uih->app;
+    my $path   = $app->config->{path}->{templates} . '/g/snippet';
+    my $file   = $app->root_dir . $path . q{/} . $f_name;
+
+    if ( -f $file ) {
+        return {
+            err => "Failed to add snippet: $file exists!",
+        };
+    }
+
+    $self->ctl->gh->write_file(
+        path   => $path,
+        file   => $f_name,
+        f_body => q{-},
+    );
+
+    my $url = $app->config->{site}->{host} . '/admin/file?do=snippets';
+
+    return {
+        url => $url,
+    };
+}
+
+sub snippetdel {
+    my ( $self, $params ) = @_;
+
+    my $fname = $params->{name};
+    my $app   = $self->ctl->gh->app;
+    my $path  = $app->config->{path}->{templates} . '/g/snippet';
+
+    $self->ctl->gh->delete_file(
+        file_path => $path . q{/} . $fname,
+    );
+
+    return {
+        url => $app->config->{site}->{host} . '/admin/file?do=snippets&msg=success',
+    };
+}
+
 sub templates {
     my ( $self, $params ) = @_;
 
-    my $app = $self->ctl->uih->app;
-
+    my $app      = $self->ctl->uih->app;
     my $tpl_path = $app->config->{path}->{templates} . '/g';
-    # my $root_dir = $app->root_dir;
 
     my $f_cur  = $params->{f} // q{};
     my $f_body = q{};
@@ -133,7 +192,6 @@ sub backups {
 
 #
 # TODO: add configs to backup
-# TODO: check for errors at every stage
 #
 sub bkpcreate {
     my ( $self, $params ) = @_;

@@ -1,0 +1,22 @@
+<h1>Snippets</h1>
+
+[% msg_text %]
+
+<hr noshade size="1">
+
+<table>
+    <tr>
+        <td>
+            <form name="snippet-add" action="/admin/file" method="POST">
+                <input type="hidden" name="do" value="snippetadd">
+                <input type="text" name="name" value="">
+                <br>
+                <input type="submit" value="Add">
+            </form>
+        </td>
+        <td>
+            [% list %]
+        </td>
+    </tr>
+</table>
+<br>

@@ -21,8 +21,7 @@ sub parse_html {
     my $tpl_name = $args{tpl_name};
     my $h_vars   = $args{h_vars};
 
-    # global marks with 'default' values
-    my $h_global = _global( dir => $root_dir . $tpl_path . '/global' );
+    my $h_global = _global( dir => $root_dir . $tpl_path . '/snippet' );
 
     my %merged = ();
     if ( scalar keys %{$h_global} ) {
