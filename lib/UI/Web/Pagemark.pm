@@ -40,7 +40,7 @@ sub list {
     );
 
     my ( $h_langs, $err_str3 ) = $self->app->ctl->sh->list('lang');
-    my $lang_links = _build_list(
+    my $lang_links = $self->_build_list(
         root_dir  => $root_dir,
         tpl_path  => $tpl_path . q{/} . $_ENTITY,
         tpl_item  => 'lang-link.html',
@@ -70,7 +70,7 @@ sub list {
             $h_files->{$key} = $h_file;
         }
 
-        $files = _build_list(
+        $files = $self->_build_list(
             root_dir => $root_dir,
             tpl_path => $tpl_path . q{/} . $_ENTITY,
             tpl_item => 'page-file.html',
