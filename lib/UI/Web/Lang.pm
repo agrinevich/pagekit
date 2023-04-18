@@ -3,8 +3,6 @@ package UI::Web::Lang;
 use Const::Fast;
 use Carp qw(carp croak);
 
-use UI::Web::Renderer;
-
 use Moo;
 use namespace::clean;
 
@@ -26,7 +24,7 @@ sub list {
     my $root_dir = $self->app->root_dir;
     my $tpl_path = $self->app->config->{path}->{templates};
 
-    my $list = _build_list(
+    my $list = $self->_build_list(
         root_dir => $root_dir,
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         tpl_item => 'list-item.html',
@@ -34,8 +32,7 @@ sub list {
         h_table => $h_table,
     );
 
-    my $html_body = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $html_body = $self->app->ctl->gh->render(
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         tpl_name => 'list.html',
         h_vars   => {
@@ -43,8 +40,7 @@ sub list {
         },
     );
 
-    my $res = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $res = $self->app->ctl->gh->render(
         tpl_path => $tpl_path,
         tpl_name => 'layout.html',
         h_vars   => {
@@ -66,8 +62,7 @@ sub one {
     my $root_dir = $self->app->root_dir;
     my $tpl_path = $self->app->config->{path}->{templates};
 
-    my $html_body = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $html_body = $self->app->ctl->gh->render(
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         tpl_name => 'edit.html',
         h_vars   => {
@@ -75,8 +70,7 @@ sub one {
         },
     );
 
-    my $res = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $res = $self->app->ctl->gh->render(
         tpl_path => $tpl_path,
         tpl_name => 'layout.html',
         h_vars   => {
@@ -90,7 +84,7 @@ sub one {
 }
 
 sub _build_list {
-    my (%args) = @_;
+    my ( $self, %args ) = @_;
 
     my $root_dir = $args{root_dir} // q{};
     my $tpl_path = $args{tpl_path} // q{};
@@ -102,8 +96,7 @@ sub _build_list {
     foreach my $id ( sort keys %{$h_table} ) {
         my $h = $h_table->{$id};
 
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $self->app->ctl->gh->render(
             tpl_path => $tpl_path,
             tpl_name => $tpl_item,
             h_vars   => $h,

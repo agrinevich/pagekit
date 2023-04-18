@@ -3,8 +3,6 @@ package UI::Web::Pagemark;
 use Const::Fast;
 use Carp qw(carp croak);
 
-use UI::Web::Renderer;
-
 use Moo;
 use namespace::clean;
 
@@ -31,8 +29,7 @@ sub list {
 
     my ( $h_page, $err_str ) = $self->app->ctl->sh->one( 'page', $page_id );
 
-    my $list = _build_list(
-        root_dir => $root_dir,
+    my $list = $self->_build_list(
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         tpl_item => 'list-item.html',
         a_items  => $h_table,
@@ -86,8 +83,7 @@ sub list {
         );
     }
 
-    my $html_body = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $html_body = $self->app->ctl->gh->render(
         tpl_path => $tpl_path . q{/} . $_ENTITY,
         tpl_name => 'list.html',
         h_vars   => {
@@ -100,8 +96,7 @@ sub list {
         },
     );
 
-    my $res = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $res = $self->app->ctl->gh->render(
         tpl_path => $tpl_path,
         tpl_name => 'layout.html',
         h_vars   => {
@@ -115,9 +110,8 @@ sub list {
 }
 
 sub _build_list {
-    my (%args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $root_dir  = $args{root_dir}  // q{};
     my $tpl_path  = $args{tpl_path}  // q{};
     my $tpl_item  = $args{tpl_item}  // q{};
     my $tpl_slctd = $args{tpl_slctd} // q{};
@@ -125,8 +119,9 @@ sub _build_list {
     my $slctd_id  = $args{slctd_id}  // 0;
     my $h_vars    = $args{h_vars}    // {};
 
-    my $result = q{};
-    my $tpl    = '';
+    my $result   = q{};
+    my $tpl      = '';
+    my $root_dir = $self->app->root_dir;
 
     foreach my $id ( sort keys %{$h_table} ) {
         my $h = $h_table->{$id};
@@ -134,8 +129,7 @@ sub _build_list {
         if   ( $slctd_id && $id == $slctd_id ) { $tpl = $tpl_slctd; }
         else                                   { $tpl = $tpl_item; }
 
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $self->app->ctl->gh->render(
             tpl_path => $tpl_path,
             tpl_name => $tpl,
             h_vars   => {

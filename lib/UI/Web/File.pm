@@ -2,8 +2,6 @@ package UI::Web::File;
 
 use Carp qw(carp croak);
 
-use UI::Web::Renderer;
-
 use Moo;
 use namespace::clean;
 
@@ -24,14 +22,12 @@ sub snippets {
     my $root_dir = $self->app->root_dir;
     my $tpl_path = $self->app->config->{path}->{templates};
 
-    my $list = _snippet_list(
-        root_dir => $root_dir,
+    my $list = $self->_snippet_list(
         tpl_path => $tpl_path . '/file',
         a_items  => $a_files,
     );
 
-    my $html_body = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $html_body = $self->app->ctl->gh->render(
         tpl_path => $tpl_path . '/file',
         tpl_name => 'snippets.html',
         h_vars   => {
@@ -39,8 +35,7 @@ sub snippets {
         },
     );
 
-    my $res = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $res = $self->app->ctl->gh->render(
         tpl_path => $tpl_path,
         tpl_name => 'layout.html',
         h_vars   => {
@@ -54,17 +49,15 @@ sub snippets {
 }
 
 sub _snippet_list {
-    my (%args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $root_dir = $args{root_dir} // q{};
     my $tpl_path = $args{tpl_path} // q{};
     my $a_files  = $args{a_items}  // {};
 
     my $result = q{};
 
     foreach my $h_file ( @{$a_files} ) {
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $self->app->ctl->gh->render(
             tpl_path => $tpl_path,
             tpl_name => 'snippets-item.html',
             h_vars   => {
@@ -86,19 +79,17 @@ sub templates {
     my $f_cur   = $h_data->{f_cur};
     my $f_body  = $h_data->{f_body};
 
-    $f_body = UI::Web::Renderer::do_escape($f_body);
+    $f_body = $self->app->ctl->gh->do_escape($f_body);
 
     my $root_dir = $self->app->root_dir;
     my $tpl_path = $self->app->config->{path}->{templates};
 
-    my $list = _tpl_list(
-        root_dir => $root_dir,
+    my $list = $self->_tpl_list(
         tpl_path => $tpl_path . '/file',
         a_items  => $h_files,
     );
 
-    my $html_body = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $html_body = $self->app->ctl->gh->render(
         tpl_path => $tpl_path . '/file',
         tpl_name => 'templates.html',
         h_vars   => {
@@ -108,8 +99,7 @@ sub templates {
         },
     );
 
-    my $res = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $res = $self->app->ctl->gh->render(
         tpl_path => $tpl_path,
         tpl_name => 'layout.html',
         h_vars   => {
@@ -123,17 +113,15 @@ sub templates {
 }
 
 sub _tpl_list {
-    my (%args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $root_dir = $args{root_dir} // q{};
     my $tpl_path = $args{tpl_path} // q{};
     my $h_files  = $args{a_items}  // {};
 
     my $result = q{};
 
     foreach my $dname ( sort keys %{$h_files} ) {
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $self->app->ctl->gh->render(
             tpl_path => $tpl_path,
             tpl_name => 'templates-dir.html',
             h_vars   => {
@@ -145,8 +133,7 @@ sub _tpl_list {
         my $a_files = $h_files->{$dname};
 
         foreach my $h_file ( @{$a_files} ) {
-            $result .= UI::Web::Renderer::parse_html(
-                root_dir => $root_dir,
+            $result .= $self->app->ctl->gh->render(
                 tpl_path => $tpl_path,
                 tpl_name => 'templates-file.html',
                 h_vars   => {
@@ -168,14 +155,12 @@ sub backups {
     my $root_dir = $self->app->root_dir;
     my $tpl_path = $self->app->config->{path}->{templates};
 
-    my $list = _bkp_list(
-        root_dir => $root_dir,
+    my $list = $self->_bkp_list(
         tpl_path => $tpl_path . '/file',
         a_items  => $a_bkps,
     );
 
-    my $html_body = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $html_body = $self->app->ctl->gh->render(
         tpl_path => $tpl_path . '/file',
         tpl_name => 'backups.html',
         h_vars   => {
@@ -183,8 +168,7 @@ sub backups {
         },
     );
 
-    my $res = UI::Web::Renderer::parse_html(
-        root_dir => $root_dir,
+    my $res = $self->app->ctl->gh->render(
         tpl_path => $tpl_path,
         tpl_name => 'layout.html',
         h_vars   => {
@@ -198,9 +182,8 @@ sub backups {
 }
 
 sub _bkp_list {
-    my (%args) = @_;
+    my ( $self, %args ) = @_;
 
-    my $root_dir = $args{root_dir} // q{};
     my $tpl_path = $args{tpl_path} // q{};
     my $a_bkps   = $args{a_items}  // {};
 
@@ -208,8 +191,7 @@ sub _bkp_list {
     my $tpl_item = q{};
 
     foreach my $h_bkp ( @{$a_bkps} ) {
-        $result .= UI::Web::Renderer::parse_html(
-            root_dir => $root_dir,
+        $result .= $self->app->ctl->gh->render(
             tpl_path => $tpl_path,
             tpl_name => 'backups-item.html',
             h_vars   => {
