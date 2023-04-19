@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 
+#
+# Plack admin app running on Starman web-server.
+# Starman web-server is run by launcher.pl script.
+#
+
 use strict;
 use warnings;
 
