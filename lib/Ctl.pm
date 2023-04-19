@@ -15,9 +15,9 @@ our $VERSION = '0.2';
 # When you run /bin/launcher.pl
 # App::Admin starts and creates Controller with adapters:
 #
-# uih - User Interface Handler (web, cli, api)
-# sh  - Storage Handler (memory, file, database)
-# gh  - Generator Handler (writing pages on disk)
+# uih - User Interface handler (web, cli, api)
+# sh  - Storage handler (memory, file, database)
+# gh  - Generator handler (writing pages and other file operations)
 #
 
 has 'uih' => (

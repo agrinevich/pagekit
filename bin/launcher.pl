@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+#
+# CLI to init/deploy/start/stop Plack app
+#
+
 use strict;
 use warnings;
 
