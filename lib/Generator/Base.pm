@@ -447,12 +447,17 @@ sub _navi_links {
             );
         }
 
+        my $path = $lang_path . $page_path;
+        if ( !$path ) {
+            $path = q{/};
+        }
+
         $d_links .= $self->render(
             tpl_path => $tpl_path,
             tpl_name => "dnavi-item$suffix.html",
             h_vars   => {
                 name        => $page_name,
-                path        => $lang_path . $page_path,
+                path        => $path,
                 child_links => $d_child_links,
             },
         );
@@ -462,7 +467,7 @@ sub _navi_links {
             tpl_name => "mnavi-item$suffix.html",
             h_vars   => {
                 name        => $page_name,
-                path        => $lang_path . $page_path,
+                path        => $path,
                 child_links => $m_child_links,
             },
         );
