@@ -208,13 +208,12 @@ sub go_tree {
         }
 
         my ( $d_navi, $m_navi ) = $self->_navi_links(
-            root_dir        => $root_dir,
-            tpl_path        => $tpl_path . '/page',
-            lang_id         => $lang_id,
-            lang_path       => $lang_path,
-            id_cur          => $id,
-            parent_id       => $parent_id,
-            page_name_inner => $h->{name},
+            root_dir  => $root_dir,
+            tpl_path  => $tpl_path . '/page',
+            lang_id   => $lang_id,
+            lang_path => $lang_path,
+            id_cur    => $id,
+            parent_id => $parent_id,
         );
 
         my ( $lang_links, $meta_tags ) = $self->_lang_links(
@@ -394,16 +393,16 @@ sub _bread_chain {
 sub _navi_links {
     my ( $self, %args ) = @_;
 
-    my $root_dir        = $args{root_dir}        // q{};
-    my $tpl_path        = $args{tpl_path}        // q{};
-    my $lang_id         = $args{lang_id}         // 0;
-    my $lang_path       = $args{lang_path}       // q{};
-    my $id_cur          = $args{id_cur}          // 0;
-    my $parent_id       = $args{parent_id}       // 0;
-    my $page_name_inner = $args{page_name_inner} // q{};
+    my $root_dir  = $args{root_dir}  // q{};
+    my $tpl_path  = $args{tpl_path}  // q{};
+    my $lang_id   = $args{lang_id}   // 0;
+    my $lang_path = $args{lang_path} // q{};
+    my $id_cur    = $args{id_cur}    // 0;
+    my $parent_id = $args{parent_id} // 0;
 
     my $d_links = q{};
     my $m_links = q{};
+    my ( $d_child_links, $m_child_links );
 
     my ( $h_pages, $err_str ) = $self->app->ctl->sh->list(
         'page', {
@@ -429,13 +428,12 @@ sub _navi_links {
             $page_name = $h_marks->{$mark_id}->{value};
         }
         else {
-            $page_name = $page_name_inner;
+            $page_name = $h->{name};
         }
 
         my $page_path = $h->{path};
         my $suffix    = q{};
 
-        my ( $d_child_links, $m_child_links );
         if ( $h->{id} == $id_cur ) {
             $suffix = '-cur';
             ( $d_child_links, $m_child_links ) = $self->_child_links(
@@ -471,6 +469,45 @@ sub _navi_links {
                 child_links => $m_child_links,
             },
         );
+    }
+
+    # add parent page link at head
+    my $parent_link = q{};
+    if ( !$d_child_links ) {
+        my ( $h_parent, $err_str1 ) = $self->app->ctl->sh->one( 'page', $parent_id );
+
+        my $parent_path = $lang_path . $h_parent->{path};
+        if ( !$parent_path ) {
+            $parent_path = q{/};
+        }
+
+        my $parent_name;
+        my ( $h_marks, $err_str ) = $self->app->ctl->sh->list(
+            'pagemark', {
+                page_id => $parent_id,
+                lang_id => $lang_id,
+                name    => 'page_name',
+            },
+        );
+        my @mark_ids = keys %{$h_marks};
+        if ( scalar @mark_ids ) {
+            my $mark_id = $mark_ids[0];
+            $parent_name = $h_marks->{$mark_id}->{value};
+        }
+        else {
+            $parent_name = $h_parent->{name};
+        }
+
+        $parent_link = $self->render(
+            tpl_path => $tpl_path,
+            tpl_name => "dnavi-item.html",
+            h_vars   => {
+                name => $parent_name,
+                path => $parent_path,
+            },
+        );
+
+        $d_links = $parent_link . $d_links;
     }
 
     return ( $d_links, $m_links );
