@@ -1,9 +1,9 @@
 package Generator::Base;
 
-use Carp qw(carp croak);
+use Carp    qw(carp croak);
 use English qw( -no_match_vars );
-use POSIX ();
-use POSIX qw(strftime);
+use POSIX   ();
+use POSIX   qw(strftime);
 use Path::Tiny; # path, spew_utf8
 use Text::Xslate qw(mark_raw html_escape);
 # use Data::Dumper;
@@ -543,7 +543,7 @@ sub _child_links {
             },
         );
         my @mark_ids  = keys %{$h_marks};
-        my $mark_id   = $mark_ids[0] // 0;
+        my $mark_id   = $mark_ids[0]                  // 0;
         my $page_name = $h_marks->{$mark_id}->{value} // q{};
 
         my $page_path = $h->{path};
