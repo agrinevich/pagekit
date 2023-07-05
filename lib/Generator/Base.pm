@@ -866,15 +866,21 @@ sub upload_file {
 
     my $file_name = $file->basename;
     my @chunks    = split /[.]/, $file_name;
-    my $ext       = pop @chunks;
-    my $name      = join q{}, @chunks;
+    my $ext       = q{};
+    if ( scalar @chunks > 1 ) {
+        $ext = pop @chunks;
+    }
+    my $name = join q{}, @chunks;
     $name =~ s/[^\w\-\_]//g;
     if ( !$name ) {
         $name = time;
     }
+    if ( length $ext > 0 ) {
+        $name .= '.' . $ext;
+    }
 
     my $file_tmp = $file->path();
-    my $file_dst = $page_dir . q{/} . $name . q{.} . $ext;
+    my $file_dst = $page_dir . q{/} . $name;
     my $success  = rename $file_tmp, $file_dst;
     return $OS_ERROR if !$success;
 
