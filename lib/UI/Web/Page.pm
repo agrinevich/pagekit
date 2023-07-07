@@ -174,6 +174,11 @@ sub _build_list {
         }
         $h->{mod_link} = $mod_link;
 
+        $h->{tr_status} = 'default';
+        if ( $h->{hidden} == 1 ) {
+            $h->{tr_status} = 'hidden';
+        }
+
         $h->{attr} = $attr{$id};
         $h->{dash} = $dash;
 
