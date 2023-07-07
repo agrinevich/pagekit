@@ -1,8 +1,8 @@
-<tr>
+<tr class="tr-[% tr_status %]">
     <td><a href="/admin/page?do=del&id=[% id %]" style="color:red" onclick="return confirm('Delete?')">X</a></td>
     <td>[% hidden %]</td>
     <td>[% prio %]</td>
-    <td>[% dash %]<a href="/admin/page?do=one&id=[% id %]" class="admin-catlink-[% color_mode %]">[% name %]</a></td>
+    <td>[% dash %]<a href="/admin/page?do=one&id=[% id %]">[% name %]</a></td>
     <td>[% mod_link %]</td>
     <td><a href="/admin/pagemark?do=list&fltr_page_id=[% id %]">marks + files</a></td>
 </tr>
