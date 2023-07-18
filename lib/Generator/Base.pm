@@ -317,7 +317,7 @@ sub _breadcrumbs {
     );
 
     my $h0        = shift @{$a_chain};
-    my $home_path = $lang_path . $h0->{path} || q{/};
+    my $home_path = $lang_path . $h0->{path};
     $breadcrumbs .= $self->render(
         tpl_path => $tpl_path,
         tpl_name => 'bread-home.html',
@@ -446,9 +446,9 @@ sub _navi_links {
         }
 
         my $path = $lang_path . $page_path;
-        if ( !$path ) {
-            $path = q{/};
-        }
+        # if ( !$path ) {
+        #     $path = q{/};
+        # }
 
         $d_links .= $self->render(
             tpl_path => $tpl_path,
@@ -477,9 +477,9 @@ sub _navi_links {
         my ( $h_parent, $err_str1 ) = $self->app->ctl->sh->one( 'page', $parent_id );
 
         my $parent_path = $lang_path . $h_parent->{path};
-        if ( !$parent_path ) {
-            $parent_path = q{/};
-        }
+        # if ( !$parent_path ) {
+        #     $parent_path = q{/};
+        # }
 
         my $parent_name;
         my ( $h_marks, $err_str ) = $self->app->ctl->sh->list(

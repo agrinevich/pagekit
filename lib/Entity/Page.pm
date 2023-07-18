@@ -120,12 +120,12 @@ sub add {
 
     my ( $h_parent, $err_str1 ) = $self->ctl->sh->one( 'page', $self->parent_id );
     my $path;
-    if ( $h_parent->{path} eq q{/} ) {
-        $path = $h_parent->{path} . $self->nick;
-    }
-    else {
-        $path = $h_parent->{path} . q{/} . $self->nick;
-    }
+    # if ( $h_parent->{path} eq q{/} ) {
+    #     $path = $h_parent->{path} . $self->nick;
+    # }
+    # else {
+    $path = $h_parent->{path} . q{/} . $self->nick;
+    # }
     $self->path($path);
 
     my ( $h_duplicates, $err_str ) = $self->ctl->sh->list( 'page', { path => $path } );
@@ -220,12 +220,12 @@ sub upd {
         my $old_path = $h_page->{path};
 
         my $new_path;
-        if ( $h_parent->{path} eq q{/} ) {
-            $new_path = $h_parent->{path} . $self->nick;
-        }
-        else {
-            $new_path = $h_parent->{path} . q{/} . $self->nick;
-        }
+        # if ( $h_parent->{path} eq q{/} ) {
+        #     $new_path = $h_parent->{path} . $self->nick;
+        # }
+        # else {
+        $new_path = $h_parent->{path} . q{/} . $self->nick;
+        # }
         $self->path($new_path);
 
         my ( $h_found, $err_str ) = $self->ctl->sh->list( 'page', { path => $new_path } );
